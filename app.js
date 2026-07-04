@@ -15,6 +15,8 @@
     selectedTodoId: null,
     selectedTodo: null,
     isEditingTodo: false,
+    calendarYear: new Date().getFullYear(),
+    calendarMonth: new Date().getMonth() + 1,
     editingNoteId: null,
     editingNote: null
   };
@@ -74,6 +76,11 @@
     elements.todoEditTitleInput = document.getElementById("todo-edit-title-input");
     elements.todoEditSave = document.getElementById("todo-edit-save");
     elements.todoEditCancel = document.getElementById("todo-edit-cancel");
+    elements.calendarPrev = document.getElementById("calendar-prev");
+    elements.calendarToday = document.getElementById("calendar-today");
+    elements.calendarNext = document.getElementById("calendar-next");
+    elements.calendarMonthLabel = document.getElementById("calendar-month-label");
+    elements.calendarGrid = document.getElementById("calendar-grid");
     elements.newNoteButton = document.getElementById("new-note-button");
     elements.noteSearch = document.getElementById("note-search");
     elements.noteList = document.getElementById("note-list");
@@ -107,6 +114,10 @@
     elements.todoDetailDelete.addEventListener("click", () => handleTodoDetailAction("delete"));
     elements.todoEditSave.addEventListener("click", saveTodoEdit);
     elements.todoEditCancel.addEventListener("click", cancelTodoEdit);
+    elements.calendarPrev.addEventListener("click", () => moveCalendarMonth(-1));
+    elements.calendarToday.addEventListener("click", showCurrentCalendarMonth);
+    elements.calendarNext.addEventListener("click", () => moveCalendarMonth(1));
+    elements.calendarGrid.addEventListener("click", handleCalendarDateClick);
     elements.newNoteButton.addEventListener("click", () => navigate("note-new"));
     elements.noteSearch.addEventListener("input", renderNotes);
     elements.noteList.addEventListener("click", handleNoteOpen);
@@ -145,7 +156,7 @@
       return;
     }
 
-    showView(["home", "todo", "notes", "settings"].includes(route) ? route : "home");
+    showView(["home", "todo", "calendar", "notes", "settings"].includes(route) ? route : "home");
   }
 
   // 指定の画面だけを表示する。
@@ -164,6 +175,7 @@
 
     if (viewName === "home") renderHome();
     if (viewName === "todo") renderTodo();
+    if (viewName === "calendar") renderCalendar();
     if (viewName === "notes") renderNotes();
   }
 
@@ -244,6 +256,112 @@
     } catch (error) {
       showMessage("ToDoの読み込みに失敗しました。", true);
     }
+  }
+
+  // カレンダー画面を表示する。
+  async function renderCalendar() {
+    const year = state.calendarYear;
+    const month = state.calendarMonth;
+    const startDate = buildDateString(year, month, 1);
+    const endDate = buildDateString(year, month, getDaysInMonth(year, month));
+
+    try {
+      const todos = await window.TMTDB.getTodosByDateRange(startDate, endDate);
+      const counts = countTodosByDate(todos);
+      const today = getTodayString();
+      const selectedDate = state.selectedDate;
+      const firstWeekday = new Date(year, month - 1, 1).getDay();
+      const daysInMonth = getDaysInMonth(year, month);
+
+      elements.calendarMonthLabel.textContent = `${year}年${month}月`;
+      elements.calendarGrid.innerHTML = "";
+
+      for (let i = 0; i < firstWeekday; i += 1) {
+        const empty = document.createElement("div");
+        empty.className = "calendar-day is-empty";
+        elements.calendarGrid.append(empty);
+      }
+
+      for (let day = 1; day <= daysInMonth; day += 1) {
+        const date = buildDateString(year, month, day);
+        const count = counts.get(date) || 0;
+        elements.calendarGrid.append(createCalendarDay(date, day, count, date === today, date === selectedDate));
+      }
+    } catch (error) {
+      showMessage("カレンダーの読み込みに失敗しました。", true);
+    }
+  }
+
+  // カレンダーの日付セルを作る。
+  function createCalendarDay(date, day, count, isToday, isSelected) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "calendar-day";
+    button.dataset.calendarDate = date;
+    button.setAttribute("aria-label", `${date} ${count ? `${count}件のToDo` : "ToDoなし"}`);
+
+    if (count > 0) {
+      button.classList.add("has-todos");
+    }
+
+    if (isToday) {
+      button.classList.add("is-today");
+    }
+
+    if (isSelected) {
+      button.classList.add("is-selected");
+    }
+
+    const dayNumber = document.createElement("span");
+    dayNumber.className = "calendar-day-number";
+    dayNumber.textContent = day;
+    button.append(dayNumber);
+
+    if (count > 0) {
+      const countLabel = document.createElement("span");
+      countLabel.className = "calendar-count";
+      countLabel.textContent = `${count}件`;
+      button.append(countLabel);
+    }
+
+    return button;
+  }
+
+  // カレンダーの日付をタップしたら、その日のToDo画面へ移動する。
+  function handleCalendarDateClick(event) {
+    const day = event.target.closest("[data-calendar-date]");
+
+    if (!day) {
+      return;
+    }
+
+    setSelectedDate(day.dataset.calendarDate);
+    navigate("todo");
+  }
+
+  // カレンダー表示月を前後に動かす。
+  function moveCalendarMonth(amount) {
+    const date = new Date(state.calendarYear, state.calendarMonth - 1 + amount, 1);
+    state.calendarYear = date.getFullYear();
+    state.calendarMonth = date.getMonth() + 1;
+    renderCalendar();
+  }
+
+  // カレンダー表示月を今月へ戻す。
+  function showCurrentCalendarMonth() {
+    const today = new Date();
+    state.calendarYear = today.getFullYear();
+    state.calendarMonth = today.getMonth() + 1;
+    renderCalendar();
+  }
+
+  // ToDo配列を日付ごとの件数にまとめる。
+  function countTodosByDate(todos) {
+    return todos.reduce((counts, todo) => {
+      const date = todo.date || getTodayString();
+      counts.set(date, (counts.get(date) || 0) + 1);
+      return counts;
+    }, new Map());
   }
 
   // ToDoの追加を処理する。
@@ -697,6 +815,16 @@
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
+  }
+
+  // 年月日からYYYY-MM-DD文字列を作る。
+  function buildDateString(year, month, day) {
+    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+
+  // 指定年月の日数を返す。
+  function getDaysInMonth(year, month) {
+    return new Date(year, month, 0).getDate();
   }
 
   // ファイル名向けの日付をYYYYMMDDで返す。

@@ -9,7 +9,7 @@
   <title>今日メモTodo</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
   <div class="app-shell">
@@ -138,6 +138,35 @@
         </div>
       </section>
 
+      <section class="view" id="view-calendar" aria-labelledby="calendar-title">
+        <div class="section-heading">
+          <div>
+            <p class="muted">カレンダー</p>
+            <h2 id="calendar-title">予定のある日</h2>
+          </div>
+        </div>
+
+        <div class="calendar-toolbar">
+          <button class="secondary-button compact" type="button" id="calendar-prev">前月</button>
+          <button class="secondary-button compact" type="button" id="calendar-today">今月</button>
+          <button class="secondary-button compact" type="button" id="calendar-next">次月</button>
+        </div>
+
+        <div class="calendar-panel">
+          <h3 class="calendar-month" id="calendar-month-label"></h3>
+          <div class="calendar-weekdays" aria-hidden="true">
+            <span>日</span>
+            <span>月</span>
+            <span>火</span>
+            <span>水</span>
+            <span>木</span>
+            <span>金</span>
+            <span>土</span>
+          </div>
+          <div class="calendar-grid" id="calendar-grid"></div>
+        </div>
+      </section>
+
       <section class="view" id="view-notes" aria-labelledby="notes-title">
         <div class="section-heading">
           <div>
@@ -206,6 +235,10 @@
         <span aria-hidden="true">✓</span>
         <span>ToDo</span>
       </button>
+      <button class="nav-button" type="button" data-go="calendar">
+        <span aria-hidden="true">□</span>
+        <span>カレンダー</span>
+      </button>
       <button class="nav-button" type="button" data-go="notes">
         <span aria-hidden="true">□</span>
         <span>メモ</span>
@@ -217,7 +250,7 @@
     </nav>
   </div>
 
-  <script src="db.js?v=8"></script>
-  <script src="app.js?v=8"></script>
+  <script src="db.js?v=9"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>

@@ -91,6 +91,24 @@
     });
   }
 
+  // 指定した日付範囲のToDoを取得する。
+  async function getTodosByDateRange(startDate, endDate) {
+    const db = await openDB();
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(TODO_STORE, "readonly");
+      const index = transaction.objectStore(TODO_STORE).index("date");
+      const range = IDBKeyRange.bound(startDate, endDate);
+      const request = index.getAll(range);
+
+      request.onsuccess = () => {
+        const todos = request.result.sort((a, b) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt));
+        resolve(todos);
+      };
+      request.onerror = () => reject(request.error);
+    });
+  }
+
   // すべてのToDoを取得する。
   async function getAllTodos() {
     return useStore(TODO_STORE, "readonly", (store) => requestToPromise(store.getAll()));
@@ -235,6 +253,7 @@
     getNote,
     getTodo,
     getTodosByDate,
+    getTodosByDateRange,
     replaceAllData,
     saveNote,
     updateTodo
