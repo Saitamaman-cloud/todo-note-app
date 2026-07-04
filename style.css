@@ -219,10 +219,11 @@ button:disabled {
 }
 
 .todo-add-form {
-  grid-template-columns: 112px minmax(0, 1fr) auto;
+  grid-template-columns: 138px 112px minmax(0, 1fr) auto;
   align-items: end;
 }
 
+.todo-add-date,
 .todo-add-time,
 .todo-add-title {
   min-width: 0;
@@ -372,6 +373,7 @@ button:disabled {
   line-height: 1.55;
 }
 
+.todo-detail-date,
 .todo-detail-time {
   color: var(--accent-dark);
   font-weight: 800;
@@ -419,7 +421,11 @@ button:disabled {
 
 @media (max-width: 430px) {
   .todo-add-form {
-    grid-template-columns: 112px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .todo-add-title {
+    grid-column: 1 / -1;
   }
 
   .todo-add-form .primary-button {

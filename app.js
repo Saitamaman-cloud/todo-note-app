@@ -27,7 +27,7 @@
   function init() {
     cacheElements();
     bindEvents();
-    elements.todoDate.value = state.selectedDate;
+    setSelectedDate(state.selectedDate);
 
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("service-worker.js").catch(() => {
@@ -51,6 +51,7 @@
     elements.recentNotes = document.getElementById("recent-notes");
     elements.todoDate = document.getElementById("todo-date");
     elements.todoForm = document.getElementById("todo-form");
+    elements.todoAddDateInput = document.getElementById("todo-add-date-input");
     elements.todoTimeInput = document.getElementById("todo-time-input");
     elements.todoTitleInput = document.getElementById("todo-title-input");
     elements.todoList = document.getElementById("todo-list");
@@ -58,6 +59,7 @@
     elements.todoDetailHeading = document.getElementById("todo-detail-heading");
     elements.todoDetailDisplay = document.getElementById("todo-detail-display");
     elements.todoDetailTitle = document.getElementById("todo-detail-title");
+    elements.todoDetailDate = document.getElementById("todo-detail-date");
     elements.todoDetailTime = document.getElementById("todo-detail-time");
     elements.todoDetailStatus = document.getElementById("todo-detail-status");
     elements.todoDetailEdit = document.getElementById("todo-detail-edit");
@@ -65,6 +67,7 @@
     elements.todoDetailNext = document.getElementById("todo-detail-next");
     elements.todoDetailDelete = document.getElementById("todo-detail-delete");
     elements.todoEditPanel = document.getElementById("todo-edit-panel");
+    elements.todoEditDateInput = document.getElementById("todo-edit-date-input");
     elements.todoEditTimeInput = document.getElementById("todo-edit-time-input");
     elements.todoEditTitleInput = document.getElementById("todo-edit-title-input");
     elements.todoEditSave = document.getElementById("todo-edit-save");
@@ -89,7 +92,7 @@
     });
 
     elements.todoDate.addEventListener("change", () => {
-      state.selectedDate = elements.todoDate.value || getTodayString();
+      setSelectedDate(elements.todoDate.value || getTodayString());
       renderTodo();
     });
 
@@ -174,6 +177,20 @@
     location.hash = hash;
   }
 
+  // ToDo画面で使う選択日と日付入力欄をまとめて同期する。
+  function setSelectedDate(date) {
+    const nextDate = date || getTodayString();
+    state.selectedDate = nextDate;
+
+    if (elements.todoDate) {
+      elements.todoDate.value = nextDate;
+    }
+
+    if (elements.todoAddDateInput) {
+      elements.todoAddDateInput.value = nextDate;
+    }
+  }
+
   // ホーム画面の件数と最近のメモを表示する。
   async function renderHome() {
     try {
@@ -210,7 +227,7 @@
   // ToDo画面を表示する。
   async function renderTodo() {
     try {
-      elements.todoDate.value = state.selectedDate;
+      setSelectedDate(state.selectedDate);
       const todos = await window.TMTDB.getTodosByDate(state.selectedDate);
       const orderedTodos = todos.sort(compareTodosByTime);
 
@@ -231,7 +248,13 @@
   async function handleAddTodo(event) {
     event.preventDefault();
     const title = elements.todoTitleInput.value.trim();
+    const date = elements.todoAddDateInput.value || state.selectedDate;
     const time = elements.todoTimeInput.value || "";
+
+    if (!date) {
+      showMessage("日付を入力してください。", true);
+      return;
+    }
 
     if (!title) {
       showMessage("ToDoの内容を入力してください。", true);
@@ -239,7 +262,8 @@
     }
 
     try {
-      await window.TMTDB.addTodo(title, state.selectedDate, time);
+      await window.TMTDB.addTodo(title, date, time);
+      setSelectedDate(date);
       elements.todoTitleInput.value = "";
       elements.todoTimeInput.value = "";
       showMessage("ToDoを追加しました。");
@@ -274,8 +298,7 @@
       }
 
       state.selectedTodo = todo;
-      state.selectedDate = todo.date;
-      elements.todoDate.value = todo.date;
+      setSelectedDate(todo.date);
       renderTodoDetail(todo, state.isEditingTodo);
     } catch (error) {
       showMessage("ToDo詳細の読み込みに失敗しました。", true);
@@ -289,7 +312,9 @@
     elements.todoDetailDisplay.hidden = isEditing;
     elements.todoEditPanel.hidden = !isEditing;
 
+    const todoDate = todo.date || state.selectedDate || getTodayString();
     elements.todoDetailTitle.textContent = todo.title;
+    elements.todoDetailDate.textContent = todoDate;
     elements.todoDetailTime.textContent = formatTodoTime(todo.time);
     elements.todoDetailStatus.textContent = STATUS_LABELS[todo.status] || STATUS_LABELS.todo;
     elements.todoDetailStatus.className = `status-badge status-${todo.status}`;
@@ -298,6 +323,7 @@
     elements.todoDetailNext.textContent = todo.status === "done" ? "完了済" : "進める";
 
     if (isEditing) {
+      elements.todoEditDateInput.value = todoDate;
       elements.todoEditTimeInput.value = todo.time || "";
       elements.todoEditTitleInput.value = todo.title;
       elements.todoEditTitleInput.focus();
@@ -351,7 +377,13 @@
     }
 
     const title = elements.todoEditTitleInput.value.trim();
+    const date = elements.todoEditDateInput.value || "";
     const time = elements.todoEditTimeInput.value || "";
+
+    if (!date) {
+      showMessage("日付を入力してください。", true);
+      return;
+    }
 
     if (!title) {
       showMessage("ToDoの内容を入力してください。", true);
@@ -359,7 +391,9 @@
     }
 
     try {
-      state.selectedTodo = await window.TMTDB.updateTodo({ ...state.selectedTodo, title, time });
+      state.selectedTodo = await window.TMTDB.updateTodo({ ...state.selectedTodo, date, title, time });
+      setSelectedDate(state.selectedTodo.date);
+      renderTodo();
       renderTodoDetail(state.selectedTodo, false);
       showMessage("ToDoを保存しました。");
       renderHome();

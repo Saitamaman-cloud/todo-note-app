@@ -9,7 +9,7 @@
   <title>今日メモTodo</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
   <div class="app-shell">
@@ -68,6 +68,10 @@
         <input class="input" id="todo-date" type="date">
 
         <form class="add-form todo-add-form" id="todo-form">
+          <div class="todo-add-date">
+            <label class="field-label compact-label" for="todo-add-date-input">日付</label>
+            <input class="input" id="todo-add-date-input" type="date">
+          </div>
           <div class="todo-add-time">
             <label class="field-label compact-label" for="todo-time-input">時刻</label>
             <input class="input" id="todo-time-input" type="time">
@@ -95,6 +99,10 @@
           <div id="todo-detail-display">
             <p class="todo-detail-title" id="todo-detail-title"></p>
             <div class="todo-detail-status-line">
+              <span>日付</span>
+              <span class="todo-detail-date" id="todo-detail-date"></span>
+            </div>
+            <div class="todo-detail-status-line">
               <span>予定時刻</span>
               <span class="todo-detail-time" id="todo-detail-time"></span>
             </div>
@@ -113,6 +121,9 @@
           </div>
 
           <div class="todo-edit-panel" id="todo-edit-panel" hidden>
+            <label class="field-label" for="todo-edit-date-input">日付</label>
+            <input class="input" id="todo-edit-date-input" type="date">
+
             <label class="field-label" for="todo-edit-time-input">時刻</label>
             <input class="input" id="todo-edit-time-input" type="time">
 
@@ -206,7 +217,7 @@
     </nav>
   </div>
 
-  <script src="db.js?v=6"></script>
-  <script src="app.js?v=6"></script>
+  <script src="db.js?v=7"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>
