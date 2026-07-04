@@ -97,13 +97,14 @@
   }
 
   // ToDoを追加する。
-  async function addTodo(title, date) {
+  async function addTodo(title, date, time = "") {
     const now = new Date().toISOString();
     const todo = {
       id: createId("todo"),
       date,
       title,
       status: "todo",
+      time,
       createdAt: now,
       updatedAt: now
     };
@@ -203,6 +204,7 @@
             date: String(todo.date),
             title: String(todo.title),
             status: ["todo", "doing", "done"].includes(todo.status) ? todo.status : "todo",
+            time: typeof todo.time === "string" ? todo.time : "",
             createdAt: todo.createdAt || new Date().toISOString(),
             updatedAt: todo.updatedAt || new Date().toISOString()
           });

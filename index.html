@@ -9,7 +9,7 @@
   <title>今日メモTodo</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
   <div class="app-shell">
@@ -67,9 +67,15 @@
         <label class="field-label" for="todo-date">日付</label>
         <input class="input" id="todo-date" type="date">
 
-        <form class="add-form" id="todo-form">
-          <label class="sr-only" for="todo-title-input">ToDoを入力</label>
-          <input class="input" id="todo-title-input" type="text" autocomplete="off" placeholder="今日やることを入力">
+        <form class="add-form todo-add-form" id="todo-form">
+          <div class="todo-add-time">
+            <label class="field-label compact-label" for="todo-time-input">時刻</label>
+            <input class="input" id="todo-time-input" type="time">
+          </div>
+          <div class="todo-add-title">
+            <label class="field-label compact-label" for="todo-title-input">ToDo</label>
+            <input class="input" id="todo-title-input" type="text" autocomplete="off" placeholder="今日やることを入力">
+          </div>
           <button class="primary-button" type="submit">追加</button>
         </form>
 
@@ -89,6 +95,10 @@
           <div id="todo-detail-display">
             <p class="todo-detail-title" id="todo-detail-title"></p>
             <div class="todo-detail-status-line">
+              <span>予定時刻</span>
+              <span class="todo-detail-time" id="todo-detail-time"></span>
+            </div>
+            <div class="todo-detail-status-line">
               <span>現在のステータス</span>
               <span class="status-badge" id="todo-detail-status"></span>
             </div>
@@ -103,6 +113,9 @@
           </div>
 
           <div class="todo-edit-panel" id="todo-edit-panel" hidden>
+            <label class="field-label" for="todo-edit-time-input">時刻</label>
+            <input class="input" id="todo-edit-time-input" type="time">
+
             <label class="field-label" for="todo-edit-title-input">内容</label>
             <input class="input" id="todo-edit-title-input" type="text" autocomplete="off" placeholder="ToDoの内容">
 
@@ -193,7 +206,7 @@
     </nav>
   </div>
 
-  <script src="db.js?v=5"></script>
-  <script src="app.js?v=5"></script>
+  <script src="db.js?v=6"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>

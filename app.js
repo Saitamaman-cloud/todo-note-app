@@ -51,18 +51,21 @@
     elements.recentNotes = document.getElementById("recent-notes");
     elements.todoDate = document.getElementById("todo-date");
     elements.todoForm = document.getElementById("todo-form");
+    elements.todoTimeInput = document.getElementById("todo-time-input");
     elements.todoTitleInput = document.getElementById("todo-title-input");
     elements.todoList = document.getElementById("todo-list");
     elements.backToTodoList = document.getElementById("back-to-todo-list");
     elements.todoDetailHeading = document.getElementById("todo-detail-heading");
     elements.todoDetailDisplay = document.getElementById("todo-detail-display");
     elements.todoDetailTitle = document.getElementById("todo-detail-title");
+    elements.todoDetailTime = document.getElementById("todo-detail-time");
     elements.todoDetailStatus = document.getElementById("todo-detail-status");
     elements.todoDetailEdit = document.getElementById("todo-detail-edit");
     elements.todoDetailBack = document.getElementById("todo-detail-back");
     elements.todoDetailNext = document.getElementById("todo-detail-next");
     elements.todoDetailDelete = document.getElementById("todo-detail-delete");
     elements.todoEditPanel = document.getElementById("todo-edit-panel");
+    elements.todoEditTimeInput = document.getElementById("todo-edit-time-input");
     elements.todoEditTitleInput = document.getElementById("todo-edit-title-input");
     elements.todoEditSave = document.getElementById("todo-edit-save");
     elements.todoEditCancel = document.getElementById("todo-edit-cancel");
@@ -209,10 +212,7 @@
     try {
       elements.todoDate.value = state.selectedDate;
       const todos = await window.TMTDB.getTodosByDate(state.selectedDate);
-      const orderedTodos = todos.sort((a, b) => {
-        const statusDiff = STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status);
-        return statusDiff || a.createdAt.localeCompare(b.createdAt);
-      });
+      const orderedTodos = todos.sort(compareTodosByTime);
 
       elements.todoList.innerHTML = "";
 
@@ -231,6 +231,7 @@
   async function handleAddTodo(event) {
     event.preventDefault();
     const title = elements.todoTitleInput.value.trim();
+    const time = elements.todoTimeInput.value || "";
 
     if (!title) {
       showMessage("ToDoの内容を入力してください。", true);
@@ -238,8 +239,9 @@
     }
 
     try {
-      await window.TMTDB.addTodo(title, state.selectedDate);
+      await window.TMTDB.addTodo(title, state.selectedDate, time);
       elements.todoTitleInput.value = "";
+      elements.todoTimeInput.value = "";
       showMessage("ToDoを追加しました。");
       renderTodo();
       renderHome();
@@ -288,6 +290,7 @@
     elements.todoEditPanel.hidden = !isEditing;
 
     elements.todoDetailTitle.textContent = todo.title;
+    elements.todoDetailTime.textContent = formatTodoTime(todo.time);
     elements.todoDetailStatus.textContent = STATUS_LABELS[todo.status] || STATUS_LABELS.todo;
     elements.todoDetailStatus.className = `status-badge status-${todo.status}`;
     elements.todoDetailBack.disabled = todo.status === "todo";
@@ -295,6 +298,7 @@
     elements.todoDetailNext.textContent = todo.status === "done" ? "完了済" : "進める";
 
     if (isEditing) {
+      elements.todoEditTimeInput.value = todo.time || "";
       elements.todoEditTitleInput.value = todo.title;
       elements.todoEditTitleInput.focus();
     }
@@ -347,6 +351,7 @@
     }
 
     const title = elements.todoEditTitleInput.value.trim();
+    const time = elements.todoEditTimeInput.value || "";
 
     if (!title) {
       showMessage("ToDoの内容を入力してください。", true);
@@ -354,7 +359,7 @@
     }
 
     try {
-      state.selectedTodo = await window.TMTDB.updateTodo({ ...state.selectedTodo, title });
+      state.selectedTodo = await window.TMTDB.updateTodo({ ...state.selectedTodo, title, time });
       renderTodoDetail(state.selectedTodo, false);
       showMessage("ToDoを保存しました。");
       renderHome();
@@ -379,6 +384,10 @@
     button.className = `todo-row ${todo.status === "done" ? "is-done" : ""}`;
     button.dataset.todoId = todo.id;
 
+    const time = document.createElement("span");
+    time.className = "todo-row-time";
+    time.textContent = formatTodoTime(todo.time);
+
     const title = document.createElement("span");
     title.className = "todo-row-title";
     title.textContent = todo.title;
@@ -387,8 +396,33 @@
     badge.className = `status-badge status-${todo.status}`;
     badge.textContent = STATUS_LABELS[todo.status] || STATUS_LABELS.todo;
 
-    button.append(title, badge);
+    button.append(time, title, badge);
     return button;
+  }
+
+  // 予定時刻つきToDoを時刻順に並べ、時刻なしは入力順にする。
+  function compareTodosByTime(a, b) {
+    const timeA = a.time || "";
+    const timeB = b.time || "";
+
+    if (timeA && timeB) {
+      return timeA.localeCompare(timeB) || a.createdAt.localeCompare(b.createdAt);
+    }
+
+    if (timeA) {
+      return -1;
+    }
+
+    if (timeB) {
+      return 1;
+    }
+
+    return a.createdAt.localeCompare(b.createdAt);
+  }
+
+  // 一覧や詳細で表示する予定時刻を整える。
+  function formatTodoTime(time) {
+    return time || "--:--";
   }
 
   // ステータス変更後の値を返す。
