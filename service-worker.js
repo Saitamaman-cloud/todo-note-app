@@ -1,10 +1,10 @@
-const CACHE_NAME = "today-memo-todo-cache-v7";
+const CACHE_NAME = "today-memo-todo-cache-v8";
 const APP_FILES = [
   "./",
   "./index.html",
-  "./style.css?v=7",
-  "./app.js?v=7",
-  "./db.js?v=7",
+  "./style.css?v=8",
+  "./app.js?v=8",
+  "./db.js?v=8",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png"
@@ -36,7 +36,7 @@ self.addEventListener("fetch", (event) => {
 
   if (event.request.mode === "navigate") {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match("./index.html"))
+      fetch(event.request, { cache: "reload" }).catch(() => caches.match("./index.html"))
     );
     return;
   }

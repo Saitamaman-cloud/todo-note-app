@@ -30,7 +30,9 @@
     setSelectedDate(state.selectedDate);
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js").catch(() => {
+      navigator.serviceWorker.register("service-worker.js").then((registration) => {
+        registration.update();
+      }).catch(() => {
         showMessage("オフライン準備に失敗しました。通常利用はできます。", true);
       });
     }
