@@ -371,6 +371,26 @@ button:disabled {
   grid-column: 1 / -1;
 }
 
+.todo-edit-open {
+  margin-top: 16px;
+}
+
+.todo-edit-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.todo-edit-panel[hidden] {
+  display: none;
+}
+
+.todo-edit-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 6px;
+}
+
 .status-todo {
   background: var(--surface-soft);
   color: var(--accent-dark);

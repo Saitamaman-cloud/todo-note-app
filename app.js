@@ -14,6 +14,7 @@
     selectedDate: getTodayString(),
     selectedTodoId: null,
     selectedTodo: null,
+    isEditingTodo: false,
     editingNoteId: null,
     editingNote: null
   };
@@ -53,11 +54,18 @@
     elements.todoTitleInput = document.getElementById("todo-title-input");
     elements.todoList = document.getElementById("todo-list");
     elements.backToTodoList = document.getElementById("back-to-todo-list");
+    elements.todoDetailHeading = document.getElementById("todo-detail-heading");
+    elements.todoDetailDisplay = document.getElementById("todo-detail-display");
     elements.todoDetailTitle = document.getElementById("todo-detail-title");
     elements.todoDetailStatus = document.getElementById("todo-detail-status");
+    elements.todoDetailEdit = document.getElementById("todo-detail-edit");
     elements.todoDetailBack = document.getElementById("todo-detail-back");
     elements.todoDetailNext = document.getElementById("todo-detail-next");
     elements.todoDetailDelete = document.getElementById("todo-detail-delete");
+    elements.todoEditPanel = document.getElementById("todo-edit-panel");
+    elements.todoEditTitleInput = document.getElementById("todo-edit-title-input");
+    elements.todoEditSave = document.getElementById("todo-edit-save");
+    elements.todoEditCancel = document.getElementById("todo-edit-cancel");
     elements.newNoteButton = document.getElementById("new-note-button");
     elements.noteSearch = document.getElementById("note-search");
     elements.noteList = document.getElementById("note-list");
@@ -85,9 +93,12 @@
     elements.todoForm.addEventListener("submit", handleAddTodo);
     elements.todoList.addEventListener("click", handleTodoOpen);
     elements.backToTodoList.addEventListener("click", () => navigate("todo"));
+    elements.todoDetailEdit.addEventListener("click", startTodoEdit);
     elements.todoDetailBack.addEventListener("click", () => handleTodoDetailAction("back"));
     elements.todoDetailNext.addEventListener("click", () => handleTodoDetailAction("next"));
     elements.todoDetailDelete.addEventListener("click", () => handleTodoDetailAction("delete"));
+    elements.todoEditSave.addEventListener("click", saveTodoEdit);
+    elements.todoEditCancel.addEventListener("click", cancelTodoEdit);
     elements.newNoteButton.addEventListener("click", () => navigate("note-new"));
     elements.noteSearch.addEventListener("input", renderNotes);
     elements.noteList.addEventListener("click", handleNoteOpen);
@@ -120,6 +131,7 @@
 
     if (route.startsWith("todo-detail-")) {
       state.selectedTodoId = decodeURIComponent(route.replace("todo-detail-", ""));
+      state.isEditingTodo = false;
       showView("todo-detail");
       loadTodoDetail();
       return;
@@ -262,25 +274,35 @@
       state.selectedTodo = todo;
       state.selectedDate = todo.date;
       elements.todoDate.value = todo.date;
-      renderTodoDetail(todo);
+      renderTodoDetail(todo, state.isEditingTodo);
     } catch (error) {
       showMessage("ToDo詳細の読み込みに失敗しました。", true);
     }
   }
 
   // ToDo詳細画面の内容を反映する。
-  function renderTodoDetail(todo) {
+  function renderTodoDetail(todo, isEditing = false) {
+    state.isEditingTodo = isEditing;
+    elements.todoDetailHeading.textContent = isEditing ? "ToDo編集" : "ToDoを確認";
+    elements.todoDetailDisplay.hidden = isEditing;
+    elements.todoEditPanel.hidden = !isEditing;
+
     elements.todoDetailTitle.textContent = todo.title;
     elements.todoDetailStatus.textContent = STATUS_LABELS[todo.status] || STATUS_LABELS.todo;
     elements.todoDetailStatus.className = `status-badge status-${todo.status}`;
     elements.todoDetailBack.disabled = todo.status === "todo";
     elements.todoDetailNext.disabled = todo.status === "done";
     elements.todoDetailNext.textContent = todo.status === "done" ? "完了済" : "進める";
+
+    if (isEditing) {
+      elements.todoEditTitleInput.value = todo.title;
+      elements.todoEditTitleInput.focus();
+    }
   }
 
   // ToDo詳細画面のボタン操作を処理する。
   async function handleTodoDetailAction(action) {
-    if (!state.selectedTodo) {
+    if (!state.selectedTodo || state.isEditingTodo) {
       return;
     }
 
@@ -298,7 +320,7 @@
 
         if (nextStatus) {
           state.selectedTodo = await window.TMTDB.updateTodo({ ...state.selectedTodo, status: nextStatus });
-          renderTodoDetail(state.selectedTodo);
+          renderTodoDetail(state.selectedTodo, false);
           showMessage("ステータスを変更しました。");
         }
       }
@@ -307,6 +329,47 @@
     } catch (error) {
       showMessage("ToDoの更新に失敗しました。", true);
     }
+  }
+
+  // ToDo詳細画面を編集モードに切り替える。
+  function startTodoEdit() {
+    if (!state.selectedTodo) {
+      return;
+    }
+
+    renderTodoDetail(state.selectedTodo, true);
+  }
+
+  // ToDo編集を保存する。
+  async function saveTodoEdit() {
+    if (!state.selectedTodo) {
+      return;
+    }
+
+    const title = elements.todoEditTitleInput.value.trim();
+
+    if (!title) {
+      showMessage("ToDoの内容を入力してください。", true);
+      return;
+    }
+
+    try {
+      state.selectedTodo = await window.TMTDB.updateTodo({ ...state.selectedTodo, title });
+      renderTodoDetail(state.selectedTodo, false);
+      showMessage("ToDoを保存しました。");
+      renderHome();
+    } catch (error) {
+      showMessage("ToDoの保存に失敗しました。", true);
+    }
+  }
+
+  // ToDo編集を取り消して詳細表示に戻す。
+  function cancelTodoEdit() {
+    if (!state.selectedTodo) {
+      return;
+    }
+
+    renderTodoDetail(state.selectedTodo, false);
   }
 
   // ToDoを一覧用のコンパクトな行として作る。

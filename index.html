@@ -9,7 +9,7 @@
   <title>今日メモTodo</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
   <div class="app-shell">
@@ -86,16 +86,30 @@
         </div>
 
         <div class="todo-detail-card">
-          <p class="todo-detail-title" id="todo-detail-title"></p>
-          <div class="todo-detail-status-line">
-            <span>現在のステータス</span>
-            <span class="status-badge" id="todo-detail-status"></span>
+          <div id="todo-detail-display">
+            <p class="todo-detail-title" id="todo-detail-title"></p>
+            <div class="todo-detail-status-line">
+              <span>現在のステータス</span>
+              <span class="status-badge" id="todo-detail-status"></span>
+            </div>
+
+            <button class="secondary-button wide todo-edit-open" type="button" id="todo-detail-edit">編集</button>
+
+            <div class="todo-detail-actions">
+              <button class="secondary-button" type="button" id="todo-detail-back">戻す</button>
+              <button class="primary-button" type="button" id="todo-detail-next">進める</button>
+              <button class="danger-button" type="button" id="todo-detail-delete">削除</button>
+            </div>
           </div>
 
-          <div class="todo-detail-actions">
-            <button class="secondary-button" type="button" id="todo-detail-back">戻す</button>
-            <button class="primary-button" type="button" id="todo-detail-next">進める</button>
-            <button class="danger-button" type="button" id="todo-detail-delete">削除</button>
+          <div class="todo-edit-panel" id="todo-edit-panel" hidden>
+            <label class="field-label" for="todo-edit-title-input">内容</label>
+            <input class="input" id="todo-edit-title-input" type="text" autocomplete="off" placeholder="ToDoの内容">
+
+            <div class="todo-edit-actions">
+              <button class="primary-button" type="button" id="todo-edit-save">保存</button>
+              <button class="secondary-button" type="button" id="todo-edit-cancel">キャンセル</button>
+            </div>
           </div>
         </div>
       </section>
@@ -179,7 +193,7 @@
     </nav>
   </div>
 
-  <script src="db.js?v=4"></script>
-  <script src="app.js?v=4"></script>
+  <script src="db.js?v=5"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>
