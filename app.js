@@ -240,11 +240,12 @@
   function handleTodoOpen(event) {
     const row = event.target.closest("[data-todo-id]");
 
-    if (!row) {
+    if (!row || !row.dataset.todoId) {
       return;
     }
 
-    navigate(`todo-detail-${encodeURIComponent(row.dataset.todoId)}`);
+    const todoId = row.dataset.todoId;
+    navigate(`todo-detail-${encodeURIComponent(todoId)}`);
   }
 
   // ToDo詳細画面を表示する。
