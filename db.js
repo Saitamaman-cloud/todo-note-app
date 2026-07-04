@@ -123,6 +123,11 @@
     return nextTodo;
   }
 
+  // ToDoを1件取得する。
+  async function getTodo(id) {
+    return useStore(TODO_STORE, "readonly", (store) => requestToPromise(store.get(id)));
+  }
+
   // ToDoを削除する。
   async function deleteTodo(id) {
     await useStore(TODO_STORE, "readwrite", (store) => store.delete(id));
@@ -226,6 +231,7 @@
     getAllNotes,
     getBackupData,
     getNote,
+    getTodo,
     getTodosByDate,
     replaceAllData,
     saveNote,

@@ -12,6 +12,8 @@
   const state = {
     currentView: "home",
     selectedDate: getTodayString(),
+    selectedTodoId: null,
+    selectedTodo: null,
     editingNoteId: null,
     editingNote: null
   };
@@ -50,6 +52,12 @@
     elements.todoForm = document.getElementById("todo-form");
     elements.todoTitleInput = document.getElementById("todo-title-input");
     elements.todoList = document.getElementById("todo-list");
+    elements.backToTodoList = document.getElementById("back-to-todo-list");
+    elements.todoDetailTitle = document.getElementById("todo-detail-title");
+    elements.todoDetailStatus = document.getElementById("todo-detail-status");
+    elements.todoDetailBack = document.getElementById("todo-detail-back");
+    elements.todoDetailNext = document.getElementById("todo-detail-next");
+    elements.todoDetailDelete = document.getElementById("todo-detail-delete");
     elements.newNoteButton = document.getElementById("new-note-button");
     elements.noteSearch = document.getElementById("note-search");
     elements.noteList = document.getElementById("note-list");
@@ -75,7 +83,11 @@
     });
 
     elements.todoForm.addEventListener("submit", handleAddTodo);
-    elements.todoList.addEventListener("click", handleTodoAction);
+    elements.todoList.addEventListener("click", handleTodoOpen);
+    elements.backToTodoList.addEventListener("click", () => navigate("todo"));
+    elements.todoDetailBack.addEventListener("click", () => handleTodoDetailAction("back"));
+    elements.todoDetailNext.addEventListener("click", () => handleTodoDetailAction("next"));
+    elements.todoDetailDelete.addEventListener("click", () => handleTodoDetailAction("delete"));
     elements.newNoteButton.addEventListener("click", () => navigate("note-new"));
     elements.noteSearch.addEventListener("input", renderNotes);
     elements.noteList.addEventListener("click", handleNoteOpen);
@@ -106,6 +118,13 @@
       return;
     }
 
+    if (route.startsWith("todo-detail-")) {
+      state.selectedTodoId = decodeURIComponent(route.replace("todo-detail-", ""));
+      showView("todo-detail");
+      loadTodoDetail();
+      return;
+    }
+
     showView(["home", "todo", "notes", "settings"].includes(route) ? route : "home");
   }
 
@@ -117,8 +136,10 @@
       view.classList.toggle("is-active", view.id === `view-${viewName}`);
     });
 
+    const activeNav = viewName === "todo-detail" ? "todo" : viewName;
+
     document.querySelectorAll(".nav-button").forEach((button) => {
-      button.classList.toggle("is-active", button.dataset.go === viewName);
+      button.classList.toggle("is-active", button.dataset.go === activeNav);
     });
 
     if (viewName === "home") renderHome();
@@ -215,82 +236,95 @@
     }
   }
 
-  // ToDoカードのボタン操作を処理する。
-  async function handleTodoAction(event) {
-    const button = event.target.closest("button[data-action]");
+  // ToDo一覧のタップで詳細画面へ移動する。
+  function handleTodoOpen(event) {
+    const button = event.target.closest("button[data-todo-id]");
 
     if (!button) {
       return;
     }
 
-    const item = button.closest("[data-todo]");
-    const todo = JSON.parse(item.dataset.todo);
+    navigate(`todo-detail-${encodeURIComponent(button.dataset.todoId)}`);
+  }
+
+  // ToDo詳細画面を表示する。
+  async function loadTodoDetail() {
+    try {
+      const todo = await window.TMTDB.getTodo(state.selectedTodoId);
+
+      if (!todo) {
+        showMessage("ToDoが見つかりません。", true);
+        navigate("todo");
+        return;
+      }
+
+      state.selectedTodo = todo;
+      state.selectedDate = todo.date;
+      elements.todoDate.value = todo.date;
+      renderTodoDetail(todo);
+    } catch (error) {
+      showMessage("ToDo詳細の読み込みに失敗しました。", true);
+    }
+  }
+
+  // ToDo詳細画面の内容を反映する。
+  function renderTodoDetail(todo) {
+    elements.todoDetailTitle.textContent = todo.title;
+    elements.todoDetailStatus.textContent = STATUS_LABELS[todo.status] || STATUS_LABELS.todo;
+    elements.todoDetailStatus.className = `status-badge status-${todo.status}`;
+    elements.todoDetailBack.disabled = todo.status === "todo";
+    elements.todoDetailNext.disabled = todo.status === "done";
+    elements.todoDetailNext.textContent = todo.status === "done" ? "完了済" : "進める";
+  }
+
+  // ToDo詳細画面のボタン操作を処理する。
+  async function handleTodoDetailAction(action) {
+    if (!state.selectedTodo) {
+      return;
+    }
 
     try {
-      if (button.dataset.action === "delete") {
+      if (action === "delete") {
         if (confirm("このToDoを削除しますか？")) {
-          await window.TMTDB.deleteTodo(todo.id);
+          await window.TMTDB.deleteTodo(state.selectedTodo.id);
           showMessage("ToDoを削除しました。");
+          state.selectedTodo = null;
+          state.selectedTodoId = null;
+          navigate("todo");
         }
       } else {
-        const nextStatus = getNextStatus(todo.status, button.dataset.action);
+        const nextStatus = getNextStatus(state.selectedTodo.status, action);
 
         if (nextStatus) {
-          await window.TMTDB.updateTodo({ ...todo, status: nextStatus });
+          state.selectedTodo = await window.TMTDB.updateTodo({ ...state.selectedTodo, status: nextStatus });
+          renderTodoDetail(state.selectedTodo);
           showMessage("ステータスを変更しました。");
         }
       }
 
-      renderTodo();
       renderHome();
     } catch (error) {
       showMessage("ToDoの更新に失敗しました。", true);
     }
   }
 
-  // ToDoを1件分のカードとして作る。
+  // ToDoを一覧用のコンパクトな行として作る。
   function createTodoItem(todo) {
-    const article = document.createElement("article");
-    article.className = `todo-item ${todo.status === "done" ? "is-done" : ""}`;
-    article.dataset.todo = JSON.stringify(todo);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `todo-row ${todo.status === "done" ? "is-done" : ""}`;
+    button.dataset.todoId = todo.id;
 
-    const top = document.createElement("div");
-    top.className = "todo-top";
-
-    const title = document.createElement("div");
-    title.className = "todo-title";
+    const title = document.createElement("span");
+    title.className = "todo-row-title";
     title.textContent = todo.title;
 
     const badge = document.createElement("span");
     badge.className = `status-badge status-${todo.status}`;
     badge.textContent = STATUS_LABELS[todo.status] || STATUS_LABELS.todo;
 
-    const actions = document.createElement("div");
-    actions.className = "todo-actions";
-
-    const backButton = document.createElement("button");
-    backButton.type = "button";
-    backButton.dataset.action = "back";
-    backButton.textContent = "戻す";
-    backButton.disabled = todo.status === "todo";
-
-    const nextButton = document.createElement("button");
-    nextButton.type = "button";
-    nextButton.dataset.action = "next";
-    nextButton.textContent = todo.status === "done" ? "完了済" : "進める";
-    nextButton.disabled = todo.status === "done";
-
-    const deleteButton = document.createElement("button");
-    deleteButton.type = "button";
-    deleteButton.className = "delete-small";
-    deleteButton.dataset.action = "delete";
-    deleteButton.textContent = "削除";
-
-    top.append(title, badge);
-    actions.append(backButton, nextButton, deleteButton);
-    article.append(top, actions);
-
-    return article;
+    button.append(title, badge);
+    return button;
   }
 
   // ステータス変更後の値を返す。

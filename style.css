@@ -45,6 +45,11 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: default;
+  opacity: 0.48;
+}
+
 .app-shell {
   min-height: 100dvh;
   padding-bottom: calc(82px + env(safe-area-inset-bottom));
@@ -284,7 +289,7 @@ button {
   text-align: center;
 }
 
-.todo-item,
+.todo-row,
 .note-item {
   width: 100%;
   border: 1px solid var(--line);
@@ -293,46 +298,77 @@ button {
   box-shadow: var(--shadow);
 }
 
-.todo-item {
-  padding: 14px;
+#todo-list {
+  gap: 6px;
 }
 
-.todo-item.is-done {
-  opacity: 0.58;
-}
-
-.todo-top {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  align-items: flex-start;
-}
-
-.todo-title {
-  min-width: 0;
-  overflow-wrap: anywhere;
-  font-weight: 800;
-}
-
-.todo-actions {
+.todo-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-  margin-top: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-height: 48px;
+  padding: 9px 12px;
+  color: inherit;
+  text-align: left;
 }
 
-.todo-actions button {
-  min-height: 42px;
-  border-radius: 8px;
+.todo-row.is-done {
+  opacity: 0.64;
+}
+
+.todo-row.is-done .todo-row-title {
+  text-decoration: line-through;
+}
+
+.todo-row-title {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.98rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.todo-row .status-badge {
+  padding: 5px 9px;
+  font-size: 0.78rem;
+}
+
+.todo-detail-card {
+  padding: 16px;
   border: 1px solid var(--line);
-  background: var(--surface-soft);
-  color: var(--text);
-  font-weight: 700;
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }
 
-.todo-actions .delete-small {
-  background: var(--danger-bg);
-  color: var(--danger);
+.todo-detail-title {
+  margin: 0 0 14px;
+  overflow-wrap: anywhere;
+  font-size: 1.14rem;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.todo-detail-status-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.todo-detail-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.todo-detail-actions .danger-button {
+  grid-column: 1 / -1;
 }
 
 .status-todo {

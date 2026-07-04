@@ -9,7 +9,7 @@
   <title>今日メモTodo</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
   <div class="app-shell">
@@ -74,6 +74,30 @@
         </form>
 
         <div class="list" id="todo-list"></div>
+      </section>
+
+      <section class="view" id="view-todo-detail" aria-labelledby="todo-detail-heading">
+        <div class="section-heading">
+          <div>
+            <p class="muted">ToDo詳細</p>
+            <h2 id="todo-detail-heading">ToDoを確認</h2>
+          </div>
+          <button class="secondary-button compact" type="button" id="back-to-todo-list">一覧へ戻る</button>
+        </div>
+
+        <div class="todo-detail-card">
+          <p class="todo-detail-title" id="todo-detail-title"></p>
+          <div class="todo-detail-status-line">
+            <span>現在のステータス</span>
+            <span class="status-badge" id="todo-detail-status"></span>
+          </div>
+
+          <div class="todo-detail-actions">
+            <button class="secondary-button" type="button" id="todo-detail-back">戻す</button>
+            <button class="primary-button" type="button" id="todo-detail-next">進める</button>
+            <button class="danger-button" type="button" id="todo-detail-delete">削除</button>
+          </div>
+        </div>
       </section>
 
       <section class="view" id="view-notes" aria-labelledby="notes-title">
@@ -155,7 +179,7 @@
     </nav>
   </div>
 
-  <script src="db.js"></script>
-  <script src="app.js"></script>
+  <script src="db.js?v=2"></script>
+  <script src="app.js?v=2"></script>
 </body>
 </html>
