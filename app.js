@@ -238,13 +238,13 @@
 
   // ToDo一覧のタップで詳細画面へ移動する。
   function handleTodoOpen(event) {
-    const button = event.target.closest("button[data-todo-id]");
+    const row = event.target.closest("[data-todo-id]");
 
-    if (!button) {
+    if (!row) {
       return;
     }
 
-    navigate(`todo-detail-${encodeURIComponent(button.dataset.todoId)}`);
+    navigate(`todo-detail-${encodeURIComponent(row.dataset.todoId)}`);
   }
 
   // ToDo詳細画面を表示する。
