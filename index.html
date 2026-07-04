@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2f6f73">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="今日メモTodo">
+  <title>今日メモTodo</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div>
+        <p class="app-kicker">個人用メモと今日の予定</p>
+        <h1>今日メモTodo</h1>
+      </div>
+    </header>
+
+    <main class="app-main" id="app">
+      <p class="message" id="message" hidden></p>
+
+      <section class="view is-active" id="view-home" aria-labelledby="home-title">
+        <div class="section-heading">
+          <div>
+            <p class="muted">ホーム</p>
+            <h2 id="home-title">今日の状況</h2>
+          </div>
+          <time class="date-pill" id="home-date"></time>
+        </div>
+
+        <div class="summary-grid" aria-label="今日のToDo件数">
+          <article class="summary-card">
+            <span class="summary-label">未着手</span>
+            <strong id="count-todo">0</strong>
+          </article>
+          <article class="summary-card">
+            <span class="summary-label">対応中</span>
+            <strong id="count-doing">0</strong>
+          </article>
+          <article class="summary-card">
+            <span class="summary-label">完了</span>
+            <strong id="count-done">0</strong>
+          </article>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">
+            <h3>最近更新したメモ</h3>
+            <button class="text-button" type="button" data-go="notes">すべて見る</button>
+          </div>
+          <div class="list" id="recent-notes"></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-todo" aria-labelledby="todo-title">
+        <div class="section-heading">
+          <div>
+            <p class="muted">ToDo</p>
+            <h2 id="todo-title">日付ごとのやること</h2>
+          </div>
+        </div>
+
+        <label class="field-label" for="todo-date">日付</label>
+        <input class="input" id="todo-date" type="date">
+
+        <form class="add-form" id="todo-form">
+          <label class="sr-only" for="todo-title-input">ToDoを入力</label>
+          <input class="input" id="todo-title-input" type="text" autocomplete="off" placeholder="今日やることを入力">
+          <button class="primary-button" type="submit">追加</button>
+        </form>
+
+        <div class="list" id="todo-list"></div>
+      </section>
+
+      <section class="view" id="view-notes" aria-labelledby="notes-title">
+        <div class="section-heading">
+          <div>
+            <p class="muted">メモ</p>
+            <h2 id="notes-title">メモ一覧</h2>
+          </div>
+          <button class="primary-button compact" type="button" id="new-note-button">新規</button>
+        </div>
+
+        <label class="sr-only" for="note-search">メモ検索</label>
+        <input class="input" id="note-search" type="search" placeholder="タイトルと本文を検索">
+
+        <div class="list" id="note-list"></div>
+      </section>
+
+      <section class="view" id="view-editor" aria-labelledby="editor-title">
+        <div class="section-heading">
+          <div>
+            <p class="muted">メモ編集</p>
+            <h2 id="editor-title">メモを書く</h2>
+          </div>
+          <button class="secondary-button compact" type="button" id="back-to-notes">戻る</button>
+        </div>
+
+        <label class="field-label" for="note-title-input">タイトル</label>
+        <input class="input" id="note-title-input" type="text" placeholder="タイトル">
+
+        <label class="field-label" for="note-body-input">本文</label>
+        <textarea class="textarea" id="note-body-input" placeholder="自由にメモを書く"></textarea>
+
+        <div class="button-row">
+          <button class="primary-button" type="button" id="save-note-button">保存</button>
+          <button class="danger-button" type="button" id="delete-note-button">削除</button>
+        </div>
+      </section>
+
+      <section class="view" id="view-settings" aria-labelledby="settings-title">
+        <div class="section-heading">
+          <div>
+            <p class="muted">設定</p>
+            <h2 id="settings-title">バックアップと情報</h2>
+          </div>
+        </div>
+
+        <div class="settings-actions">
+          <button class="primary-button wide" type="button" id="export-button">バックアップ出力</button>
+          <button class="secondary-button wide" type="button" id="import-button">バックアップ復元</button>
+          <input id="import-file" type="file" accept="application/json,.json" hidden>
+        </div>
+
+        <div class="info-box">
+          <h3>アプリ情報</h3>
+          <p>今日メモTodoは、ToDoと複数ページのメモを端末内に保存する軽量PWAです。</p>
+          <p>保存先はこのブラウザのIndexedDBです。ログインやクラウド同期はありません。</p>
+          <p>ブラウザデータやサイトデータを削除すると、保存内容が消える可能性があります。必要に応じてバックアップを出力してください。</p>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="メインナビゲーション">
+      <button class="nav-button is-active" type="button" data-go="home">
+        <span aria-hidden="true">⌂</span>
+        <span>ホーム</span>
+      </button>
+      <button class="nav-button" type="button" data-go="todo">
+        <span aria-hidden="true">✓</span>
+        <span>ToDo</span>
+      </button>
+      <button class="nav-button" type="button" data-go="notes">
+        <span aria-hidden="true">□</span>
+        <span>メモ</span>
+      </button>
+      <button class="nav-button" type="button" data-go="settings">
+        <span aria-hidden="true">⚙</span>
+        <span>設定</span>
+      </button>
+    </nav>
+  </div>
+
+  <script src="db.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
