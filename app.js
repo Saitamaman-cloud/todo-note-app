@@ -15,6 +15,8 @@
     selectedTodoId: null,
     selectedTodo: null,
     isEditingTodo: false,
+    isTodoSelectMode: false,
+    selectedTodoIds: new Set(),
     calendarYear: new Date().getFullYear(),
     calendarMonth: new Date().getMonth() + 1,
     editingNoteId: null,
@@ -58,6 +60,12 @@
     elements.todoAddDateInput = document.getElementById("todo-add-date-input");
     elements.todoTimeInput = document.getElementById("todo-time-input");
     elements.todoTitleInput = document.getElementById("todo-title-input");
+    elements.todoSelectMode = document.getElementById("todo-select-mode");
+    elements.todoStartAll = document.getElementById("todo-start-all");
+    elements.todoSelectPanel = document.getElementById("todo-select-panel");
+    elements.todoSelectedCount = document.getElementById("todo-selected-count");
+    elements.todoDeleteSelected = document.getElementById("todo-delete-selected");
+    elements.todoSelectCancel = document.getElementById("todo-select-cancel");
     elements.todoList = document.getElementById("todo-list");
     elements.backToTodoList = document.getElementById("back-to-todo-list");
     elements.todoDetailHeading = document.getElementById("todo-detail-heading");
@@ -106,6 +114,13 @@
     });
 
     elements.todoForm.addEventListener("submit", handleAddTodo);
+    elements.todoSelectMode.addEventListener("click", enterTodoSelectMode);
+    elements.todoStartAll.addEventListener("click", startAllTodoItems);
+    elements.todoDeleteSelected.addEventListener("click", deleteSelectedTodos);
+    elements.todoSelectCancel.addEventListener("click", () => {
+      clearTodoSelection();
+      renderTodo();
+    });
     elements.todoList.addEventListener("click", handleTodoOpen);
     elements.backToTodoList.addEventListener("click", () => navigate("todo"));
     elements.todoDetailEdit.addEventListener("click", startTodoEdit);
@@ -161,6 +176,10 @@
 
   // 指定の画面だけを表示する。
   function showView(viewName) {
+    if (viewName !== "todo") {
+      clearTodoSelection();
+    }
+
     state.currentView = viewName;
 
     elements.views.forEach((view) => {
@@ -194,6 +213,11 @@
   // ToDo画面で使う選択日と日付入力欄をまとめて同期する。
   function setSelectedDate(date) {
     const nextDate = date || getTodayString();
+
+    if (state.selectedDate && state.selectedDate !== nextDate) {
+      clearTodoSelection();
+    }
+
     state.selectedDate = nextDate;
 
     if (elements.todoDate) {
@@ -246,6 +270,8 @@
       const orderedTodos = todos.sort(compareTodosByTime);
 
       elements.todoList.innerHTML = "";
+      syncSelectedTodoIds(orderedTodos);
+      renderTodoBulkControls(orderedTodos);
 
       if (!orderedTodos.length) {
         elements.todoList.append(createEmptyState("この日のToDoはまだありません。"));
@@ -384,6 +410,7 @@
     try {
       await window.TMTDB.addTodo(title, date, time);
       setSelectedDate(date);
+      clearTodoSelection();
       elements.todoTitleInput.value = "";
       elements.todoTimeInput.value = "";
       showMessage("ToDoを追加しました。");
@@ -403,6 +430,14 @@
     }
 
     const todoId = row.dataset.todoId;
+
+    if (state.isTodoSelectMode) {
+      event.preventDefault();
+      toggleSelectedTodo(todoId);
+      renderTodo();
+      return;
+    }
+
     navigate(`todo-detail-${encodeURIComponent(todoId)}`);
   }
 
@@ -463,6 +498,7 @@
           showMessage("ToDoを削除しました。");
           state.selectedTodo = null;
           state.selectedTodoId = null;
+          clearTodoSelection();
           navigate("todo");
         }
       } else {
@@ -533,10 +569,22 @@
 
   // ToDoを一覧用のコンパクトな行として作る。
   function createTodoItem(todo) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = `todo-row ${todo.status === "done" ? "is-done" : ""}`;
-    button.dataset.todoId = todo.id;
+    const row = state.isTodoSelectMode ? document.createElement("label") : document.createElement("button");
+    row.className = `todo-row ${state.isTodoSelectMode ? "is-selectable" : ""} ${todo.status === "done" ? "is-done" : ""}`;
+    row.dataset.todoId = todo.id;
+
+    if (!state.isTodoSelectMode) {
+      row.type = "button";
+    }
+
+    if (state.isTodoSelectMode) {
+      const checkbox = document.createElement("input");
+      checkbox.className = "todo-row-check";
+      checkbox.type = "checkbox";
+      checkbox.checked = state.selectedTodoIds.has(todo.id);
+      checkbox.setAttribute("aria-label", `${todo.title}を選択`);
+      row.append(checkbox);
+    }
 
     const time = document.createElement("span");
     time.className = "todo-row-time";
@@ -550,8 +598,106 @@
     badge.className = `status-badge status-${todo.status}`;
     badge.textContent = STATUS_LABELS[todo.status] || STATUS_LABELS.todo;
 
-    button.append(time, title, badge);
-    return button;
+    row.append(time, title, badge);
+    return row;
+  }
+
+  // 一括操作エリアの表示状態を更新する。
+  function renderTodoBulkControls(todos) {
+    const todoCount = todos.length;
+    const todoStatusCount = todos.filter((todo) => todo.status === "todo").length;
+    const selectedCount = state.selectedTodoIds.size;
+
+    elements.todoSelectPanel.hidden = !state.isTodoSelectMode;
+    elements.todoSelectMode.disabled = !todoCount || state.isTodoSelectMode;
+    elements.todoStartAll.disabled = state.isTodoSelectMode || !todoStatusCount;
+    elements.todoDeleteSelected.disabled = !selectedCount;
+    elements.todoSelectedCount.textContent = `選択 ${selectedCount}件`;
+  }
+
+  // 選択モードを開始する。
+  function enterTodoSelectMode() {
+    state.isTodoSelectMode = true;
+    state.selectedTodoIds.clear();
+    renderTodo();
+  }
+
+  // 選択中のToDoを切り替える。
+  function toggleSelectedTodo(todoId) {
+    if (state.selectedTodoIds.has(todoId)) {
+      state.selectedTodoIds.delete(todoId);
+      return;
+    }
+
+    state.selectedTodoIds.add(todoId);
+  }
+
+  // 選択状態を解除する。
+  function clearTodoSelection() {
+    state.isTodoSelectMode = false;
+    state.selectedTodoIds.clear();
+  }
+
+  // 表示中の日付に存在しない選択IDを取り除く。
+  function syncSelectedTodoIds(todos) {
+    const visibleIds = new Set(todos.map((todo) => todo.id));
+    state.selectedTodoIds.forEach((id) => {
+      if (!visibleIds.has(id)) {
+        state.selectedTodoIds.delete(id);
+      }
+    });
+  }
+
+  // 選択したToDoをまとめて削除する。
+  async function deleteSelectedTodos() {
+    const ids = Array.from(state.selectedTodoIds);
+
+    if (!ids.length) {
+      showMessage("削除するToDoを選択してください。", true);
+      return;
+    }
+
+    if (!confirm("選択したToDoを削除しますか？")) {
+      return;
+    }
+
+    try {
+      await Promise.all(ids.map((id) => window.TMTDB.deleteTodo(id)));
+      clearTodoSelection();
+      showMessage("選択したToDoを削除しました。");
+      renderTodo();
+      renderHome();
+    } catch (error) {
+      showMessage("選択したToDoの削除に失敗しました。", true);
+    }
+  }
+
+  // 表示中の日付の未着手ToDoをまとめて対応中にする。
+  async function startAllTodoItems() {
+    if (state.isTodoSelectMode) {
+      return;
+    }
+
+    try {
+      const todos = await window.TMTDB.getTodosByDate(state.selectedDate);
+      const targets = todos.filter((todo) => todo.status === "todo");
+
+      if (!targets.length) {
+        showMessage("未着手のToDoはありません。");
+        return;
+      }
+
+      if (!confirm("この日の未着手ToDoをすべて対応中にしますか？")) {
+        return;
+      }
+
+      await Promise.all(targets.map((todo) => window.TMTDB.updateTodo({ ...todo, status: "doing" })));
+      showMessage("未着手のToDoを対応中にしました。");
+      renderTodo();
+      renderHome();
+    } catch (error) {
+      showMessage("未着手ToDoの一括更新に失敗しました。", true);
+    }
   }
 
   // 予定時刻つきToDoを時刻順に並べ、時刻なしは入力順にする。
