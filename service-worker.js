@@ -1,10 +1,10 @@
-const CACHE_NAME = "today-memo-todo-cache-v12";
+const CACHE_NAME = "today-memo-todo-cache-v13";
 const APP_FILES = [
   "./",
   "./index.html",
-  "./style-v11.css?v=12",
-  "./app-v11.js?v=12",
-  "./db-v11.js?v=12",
+  "./style-v11.css?v=13",
+  "./app-v11.js?v=13",
+  "./db-v11.js?v=13",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png"

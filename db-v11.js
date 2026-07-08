@@ -124,7 +124,7 @@
     return useStore(TODO_STORE, "readonly", (store) => requestToPromise(store.getAll()));
   }
 
-  async function addTodo(title, date, time = "") {
+  async function addTodo(title, date, time = "", options = {}) {
     const now = new Date().toISOString();
     const todo = {
       id: createId("todo"),
@@ -132,6 +132,9 @@
       title,
       status: "todo",
       time,
+      routineId: options.routineId || "",
+      routineDate: options.routineDate || "",
+      createdByRoutine: options.createdByRoutine === true,
       createdAt: now,
       updatedAt: now
     };
@@ -197,11 +200,14 @@
       intervalDays: Number.isFinite(Number(routine.intervalDays)) ? Math.max(1, Number(routine.intervalDays)) : 1,
       daysOfWeek: Array.isArray(routine.daysOfWeek) ? routine.daysOfWeek.map(String) : [],
       dayOfMonth: Number.isFinite(Number(routine.dayOfMonth)) ? Math.min(31, Math.max(1, Number(routine.dayOfMonth))) : 1,
+      startDate: typeof routine.startDate === "string" ? routine.startDate : "",
+      endDate: typeof routine.endDate === "string" ? routine.endDate : "",
       lastDoneDate: typeof routine.lastDoneDate === "string" ? routine.lastDoneDate : "",
       nextDueDate: typeof routine.nextDueDate === "string" ? routine.nextDueDate : "",
       defaultTime: typeof routine.defaultTime === "string" ? routine.defaultTime : "",
       isActive: routine.isActive !== false,
       autoCreateTodo: routine.autoCreateTodo === true,
+      excludedTodoDates: Array.isArray(routine.excludedTodoDates) ? routine.excludedTodoDates.map(String) : [],
       createdAt: routine.createdAt || now,
       updatedAt: now
     };
@@ -316,6 +322,9 @@
             title: String(todo.title),
             status: ["todo", "doing", "done"].includes(todo.status) ? todo.status : "todo",
             time: typeof todo.time === "string" ? todo.time : "",
+            routineId: typeof todo.routineId === "string" ? todo.routineId : "",
+            routineDate: typeof todo.routineDate === "string" ? todo.routineDate : "",
+            createdByRoutine: todo.createdByRoutine === true,
             createdAt: todo.createdAt || now,
             updatedAt: todo.updatedAt || now
           });

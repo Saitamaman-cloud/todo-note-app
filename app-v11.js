@@ -240,6 +240,7 @@
               <button class="secondary-button compact" type="button" id="calendar-prev">前月</button>
               <button class="secondary-button compact" type="button" id="calendar-today">今月</button>
               <button class="secondary-button compact" type="button" id="calendar-next">次月</button>
+              <button class="danger-button compact" type="button" id="calendar-delete-month-todos">表示月のToDoを全削除</button>
             </div>
 
             <div class="calendar-panel">
@@ -367,8 +368,14 @@
                 </div>
 
                 <div>
-                  <label class="field-label" for="routine-next-date-input">初回予定日 / 次回予定日</label>
+                  <label class="field-label" for="routine-next-date-input">開始日 / 次回予定日</label>
                   <input class="input" id="routine-next-date-input" type="date">
+                </div>
+
+                <div>
+                  <label class="field-label" for="routine-end-date-input">終了日</label>
+                  <input class="input" id="routine-end-date-input" type="date">
+                  <p class="field-help">空欄なら自動作成は90日先までです。</p>
                 </div>
 
                 <div class="conditional-field" id="routine-interval-group">
@@ -508,6 +515,7 @@
     elements.calendarPrev = document.getElementById("calendar-prev");
     elements.calendarToday = document.getElementById("calendar-today");
     elements.calendarNext = document.getElementById("calendar-next");
+    elements.calendarDeleteMonthTodos = document.getElementById("calendar-delete-month-todos");
     elements.calendarMonthLabel = document.getElementById("calendar-month-label");
     elements.calendarGrid = document.getElementById("calendar-grid");
     elements.newNoteButton = document.getElementById("new-note-button");
@@ -533,6 +541,7 @@
     elements.routineDescriptionInput = document.getElementById("routine-description-input");
     elements.routineRepeatType = document.getElementById("routine-repeat-type");
     elements.routineNextDateInput = document.getElementById("routine-next-date-input");
+    elements.routineEndDateInput = document.getElementById("routine-end-date-input");
     elements.routineIntervalGroup = document.getElementById("routine-interval-group");
     elements.routineIntervalInput = document.getElementById("routine-interval-input");
     elements.routineWeeklyGroup = document.getElementById("routine-weekly-group");
@@ -581,6 +590,7 @@
     elements.calendarPrev.addEventListener("click", () => moveCalendarMonth(-1));
     elements.calendarToday.addEventListener("click", showCurrentCalendarMonth);
     elements.calendarNext.addEventListener("click", () => moveCalendarMonth(1));
+    elements.calendarDeleteMonthTodos.addEventListener("click", deleteCalendarMonthTodos);
     elements.calendarGrid.addEventListener("click", handleCalendarDateClick);
     elements.newNoteButton.addEventListener("click", () => navigate("note-new"));
     elements.noteSearch.addEventListener("input", renderNotes);
@@ -865,6 +875,37 @@
     renderCalendar();
   }
 
+  async function deleteCalendarMonthTodos() {
+    const year = state.calendarYear;
+    const month = state.calendarMonth;
+    const startDate = buildDateString(year, month, 1);
+    const endDate = buildDateString(year, month, getDaysInMonth(year, month));
+    const monthLabel = `${year}年${month}月`;
+
+    try {
+      const todos = await window.TMTDB.getTodosByDateRange(startDate, endDate);
+
+      if (!todos.length) {
+        showMessage(`${monthLabel}に削除対象のToDoはありません。`);
+        return;
+      }
+
+      const ok = confirm(`${monthLabel}のToDoをすべて削除します。\n\nこの月に登録されている通常ToDo、ルーチン由来ToDoもすべて削除されます。\nこの操作は元に戻せません。\n\n削除してよろしいですか？`);
+
+      if (!ok) {
+        return;
+      }
+
+      await Promise.all(todos.map((todo) => deleteTodoWithRoutineMemory(todo)));
+      showMessage(`${monthLabel}のToDoを${todos.length}件削除しました。`);
+      renderCalendar();
+      renderTodo();
+      renderHome();
+    } catch (error) {
+      showMessage("表示月のToDo削除に失敗しました。", true);
+    }
+  }
+
   function countTodosByDate(todos) {
     return todos.reduce((counts, todo) => {
       const date = todo.date || getTodayString();
@@ -983,7 +1024,7 @@
     try {
       if (action === "delete") {
         if (confirm("このToDoを削除しますか？")) {
-          await window.TMTDB.deleteTodo(state.selectedTodo.id);
+          await deleteTodoWithRoutineMemory(state.selectedTodo);
           showMessage("ToDoを削除しました。");
           state.selectedTodo = null;
           state.selectedTodoId = null;
@@ -1141,7 +1182,8 @@
     }
 
     try {
-      await Promise.all(ids.map((id) => window.TMTDB.deleteTodo(id)));
+      const todos = await Promise.all(ids.map((id) => window.TMTDB.getTodo(id)));
+      await Promise.all(todos.filter(Boolean).map((todo) => deleteTodoWithRoutineMemory(todo)));
       clearTodoSelection();
       showMessage("選択したToDoを削除しました。");
       renderTodo();
@@ -1149,6 +1191,34 @@
     } catch (error) {
       showMessage("選択したToDoの削除に失敗しました。", true);
     }
+  }
+
+  async function deleteTodoWithRoutineMemory(todo) {
+    if (!todo) {
+      return;
+    }
+
+    await rememberRoutineTodoDeletion(todo);
+    await window.TMTDB.deleteTodo(todo.id);
+  }
+
+  async function rememberRoutineTodoDeletion(todo) {
+    if (!todo.routineId || !todo.date) {
+      return;
+    }
+
+    const routine = await window.TMTDB.getRoutine(todo.routineId);
+
+    if (!routine) {
+      return;
+    }
+
+    const excludedTodoDates = new Set(Array.isArray(routine.excludedTodoDates) ? routine.excludedTodoDates : []);
+    excludedTodoDates.add(todo.date);
+    await window.TMTDB.saveRoutine({
+      ...routine,
+      excludedTodoDates: Array.from(excludedTodoDates).sort()
+    });
   }
 
   async function startAllTodoItems() {
@@ -1575,6 +1645,12 @@
 
   async function addRoutineToTodayTodo(routine, options = {}) {
     const targetDate = options.date || getRoutineTodoDate(routine);
+
+    if (!isRoutineOccurrenceAllowed(routine, targetDate)) {
+      showMessage("このルーチンの期間外なのでToDoは追加しませんでした。", true);
+      return false;
+    }
+
     const todos = await window.TMTDB.getTodosByDate(targetDate);
     const duplicate = todos.find((todo) => todo.title === routine.title);
 
@@ -1586,7 +1662,11 @@
       return false;
     }
 
-    await window.TMTDB.addTodo(routine.title, targetDate, routine.defaultTime || "");
+    await window.TMTDB.addTodo(routine.title, targetDate, routine.defaultTime || "", {
+      routineId: routine.id,
+      routineDate: targetDate,
+      createdByRoutine: true
+    });
     setSelectedDate(targetDate);
     if (!options.silent) {
       showMessage(`${targetDate} のToDoへ追加しました。`);
@@ -1623,7 +1703,11 @@
         continue;
       }
 
-      await window.TMTDB.addTodo(routine.title, date, routine.defaultTime || "");
+      await window.TMTDB.addTodo(routine.title, date, routine.defaultTime || "", {
+        routineId: routine.id,
+        routineDate: date,
+        createdByRoutine: true
+      });
       added += 1;
     }
 
@@ -1654,16 +1738,19 @@
 
   function getRoutineTodoExpansionDates(routine) {
     const startDate = getRoutineTodoDate(routine);
-    const endDate = addDays(startDate, ROUTINE_TODO_EXPANSION_DAYS);
+    const endDate = getRoutineTodoExpansionEndDate(routine, startDate);
     const dates = [];
     let currentDate = startDate;
+    const excludedTodoDates = new Set(Array.isArray(routine.excludedTodoDates) ? routine.excludedTodoDates : []);
 
     for (let count = 0; count < ROUTINE_TODO_EXPANSION_LIMIT; count += 1) {
       if (!currentDate || currentDate > endDate) {
         break;
       }
 
-      dates.push(currentDate);
+      if (isRoutineOccurrenceAllowed(routine, currentDate) && !excludedTodoDates.has(currentDate)) {
+        dates.push(currentDate);
+      }
 
       if (routine.repeatType === "manual") {
         break;
@@ -1678,6 +1765,32 @@
     }
 
     return dates;
+  }
+
+  function getRoutineTodoExpansionEndDate(routine, startDate) {
+    const defaultEndDate = addDays(startDate, ROUTINE_TODO_EXPANSION_DAYS);
+
+    if (routine.endDate && routine.endDate < defaultEndDate) {
+      return routine.endDate;
+    }
+
+    return defaultEndDate;
+  }
+
+  function isRoutineOccurrenceAllowed(routine, date) {
+    if (!date) {
+      return false;
+    }
+
+    if (routine.startDate && date < routine.startDate) {
+      return false;
+    }
+
+    if (routine.endDate && date > routine.endDate) {
+      return false;
+    }
+
+    return true;
   }
 
   async function addAllDueRoutinesToTodo() {
@@ -1698,7 +1811,11 @@
           continue;
         }
 
-        await window.TMTDB.addTodo(routine.title, today, routine.defaultTime || "");
+        await window.TMTDB.addTodo(routine.title, today, routine.defaultTime || "", {
+          routineId: routine.id,
+          routineDate: today,
+          createdByRoutine: true
+        });
         titles.add(routine.title);
         added += 1;
       }
@@ -1785,6 +1902,8 @@
       intervalDays: 7,
       daysOfWeek: [],
       dayOfMonth: new Date().getDate(),
+      startDate: getTodayString(),
+      endDate: "",
       lastDoneDate: "",
       nextDueDate: getTodayString(),
       defaultTime: "",
@@ -1800,6 +1919,7 @@
     elements.routineDescriptionInput.value = routine.description || "";
     elements.routineRepeatType.value = routine.repeatType || "daily";
     elements.routineNextDateInput.value = routine.nextDueDate || getTodayString();
+    elements.routineEndDateInput.value = routine.endDate || "";
     elements.routineIntervalInput.value = routine.intervalDays || 7;
     elements.routineDayMonthInput.value = routine.dayOfMonth || 1;
     elements.routineTimeInput.value = routine.defaultTime || "";
@@ -1853,6 +1973,7 @@
     const category = elements.routineCategoryCustom.value.trim() || elements.routineCategorySelect.value || "その他";
     const repeatType = elements.routineRepeatType.value;
     const nextDueDate = elements.routineNextDateInput.value;
+    const endDate = elements.routineEndDateInput.value || "";
     const intervalDays = Number(elements.routineIntervalInput.value || 1);
     const dayOfMonth = Number(elements.routineDayMonthInput.value || 1);
     const daysOfWeek = Array.from(document.querySelectorAll("input[name='routine-weekday']:checked")).map((input) => input.value);
@@ -1864,6 +1985,11 @@
 
     if (!nextDueDate) {
       showMessage("初回予定日 / 次回予定日を入力してください。", true);
+      return null;
+    }
+
+    if (endDate && endDate < nextDueDate) {
+      showMessage("終了日は開始日以降にしてください。", true);
       return null;
     }
 
@@ -1890,6 +2016,8 @@
       intervalDays,
       daysOfWeek,
       dayOfMonth,
+      startDate: state.editingRoutine?.startDate || nextDueDate,
+      endDate,
       lastDoneDate: elements.routineLastDoneInput.value || "",
       nextDueDate,
       defaultTime: elements.routineTimeInput.value || "",

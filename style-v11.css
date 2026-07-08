@@ -504,7 +504,7 @@ button:disabled {
 
 .calendar-toolbar {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
   margin-bottom: 14px;
 }
@@ -821,6 +821,7 @@ button:disabled {
   }
 
   .todo-bulk-toolbar,
+  .calendar-toolbar,
   .todo-select-actions,
   .routine-toolbar,
   .routine-filter-grid,
