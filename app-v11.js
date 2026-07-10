@@ -897,6 +897,7 @@
         return;
       }
 
+      await rememberRoutineTodoDeletionsForDateRange(startDate, endDate);
       await Promise.all(todos.map((todo) => deleteTodoWithRoutineMemory(todo)));
       showMessage(`${monthLabel}のToDoを${todos.length}件削除しました。`);
       renderCalendar();
@@ -1220,6 +1221,29 @@
       ...routine,
       excludedTodoDates: Array.from(excludedTodoDates).sort()
     });
+  }
+
+  async function rememberRoutineTodoDeletionsForDateRange(startDate, endDate) {
+    const routines = await window.TMTDB.getAllRoutines();
+
+    for (const routine of routines) {
+      if (!routine.isActive || !routine.autoCreateTodo) {
+        continue;
+      }
+
+      const dates = getRoutineOccurrenceDatesInRange(routine, startDate, endDate);
+
+      if (!dates.length) {
+        continue;
+      }
+
+      const excludedTodoDates = new Set(Array.isArray(routine.excludedTodoDates) ? routine.excludedTodoDates : []);
+      dates.forEach((date) => excludedTodoDates.add(date));
+      await window.TMTDB.saveRoutine({
+        ...routine,
+        excludedTodoDates: Array.from(excludedTodoDates).sort()
+      });
+    }
   }
 
   async function startAllTodoItems() {
@@ -1750,6 +1774,40 @@
       }
 
       if (isRoutineOccurrenceAllowed(routine, currentDate) && !excludedTodoDates.has(currentDate)) {
+        dates.push(currentDate);
+      }
+
+      if (routine.repeatType === "manual") {
+        break;
+      }
+
+      const nextDate = calculateNextDueDate(routine, currentDate);
+      if (!nextDate || nextDate <= currentDate) {
+        break;
+      }
+
+      currentDate = nextDate;
+    }
+
+    return dates;
+  }
+
+  function getRoutineOccurrenceDatesInRange(routine, rangeStartDate, rangeEndDate) {
+    const seedDate = routine.startDate || routine.nextDueDate;
+    const dates = [];
+
+    if (!seedDate || seedDate > rangeEndDate) {
+      return dates;
+    }
+
+    let currentDate = seedDate;
+
+    for (let count = 0; count < 1000; count += 1) {
+      if (!currentDate || currentDate > rangeEndDate) {
+        break;
+      }
+
+      if (currentDate >= rangeStartDate && isRoutineOccurrenceAllowed(routine, currentDate)) {
         dates.push(currentDate);
       }
 
