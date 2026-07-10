@@ -45,6 +45,7 @@
     editingNote: null,
     editingRoutineId: null,
     editingRoutine: null,
+    isDeletingRoutine: false,
     routineFilter: "due",
     routineCategoryFilter: "all"
   };
@@ -234,13 +235,13 @@
                 <p class="muted">カレンダー</p>
                 <h2 id="calendar-title">予定のある日</h2>
               </div>
+              <button class="danger-button compact" type="button" id="calendar-delete-month-todos">月の削除</button>
             </div>
 
             <div class="calendar-toolbar">
               <button class="secondary-button compact" type="button" id="calendar-prev">前月</button>
               <button class="secondary-button compact" type="button" id="calendar-today">今月</button>
               <button class="secondary-button compact" type="button" id="calendar-next">次月</button>
-              <button class="danger-button compact" type="button" id="calendar-delete-month-todos">表示月のToDoを全削除</button>
             </div>
 
             <div class="calendar-panel">
@@ -2044,24 +2045,61 @@
     }
   }
 
-  async function deleteEditingRoutine() {
-    if (!state.editingRoutine) {
+  async function deleteEditingRoutine(event) {
+    event?.preventDefault();
+    event?.stopPropagation();
+
+    if (state.isDeletingRoutine) {
       return;
     }
 
-    if (!confirm("このルーチンを削除しますか？ 実施履歴はバックアップには残りません。")) {
+    let routine = state.editingRoutine;
+
+    if (!routine && state.editingRoutineId) {
+      routine = await window.TMTDB.getRoutine(state.editingRoutineId);
+    }
+
+    if (!routine) {
+      showMessage("削除するルーチンが見つかりません。", true);
+      navigate("routines");
       return;
     }
 
     try {
-      await window.TMTDB.deleteRoutine(state.editingRoutine.id);
+      state.isDeletingRoutine = true;
+      elements.routineDeleteButton.disabled = true;
+      elements.routineToggleActiveButton.disabled = true;
+
+      const relatedTodos = await getTodosForRoutine(routine.id);
+      const deleteRelatedTodos = relatedTodos.length > 0
+        ? confirm(`このルーチンを削除しますか？\n\nこのルーチンから作成済みのToDoが${relatedTodos.length}件あります。これらも一緒に削除しますか？`)
+        : confirm("このルーチンを削除しますか？");
+
+      if (!deleteRelatedTodos) {
+        return;
+      }
+
+      if (relatedTodos.length > 0) {
+        await Promise.all(relatedTodos.map((todo) => window.TMTDB.deleteTodo(todo.id)));
+      }
+
+      await window.TMTDB.deleteRoutine(routine.id);
       state.editingRoutine = null;
       state.editingRoutineId = null;
-      showMessage("ルーチンを削除しました。");
+      showMessage(relatedTodos.length > 0 ? `ルーチンと関連ToDo ${relatedTodos.length}件を削除しました。` : "ルーチンを削除しました。");
       navigate("routines");
     } catch (error) {
       showMessage("ルーチンの削除に失敗しました。", true);
+    } finally {
+      state.isDeletingRoutine = false;
+      elements.routineDeleteButton.disabled = !state.editingRoutine;
+      elements.routineToggleActiveButton.disabled = !state.editingRoutine;
     }
+  }
+
+  async function getTodosForRoutine(routineId) {
+    const todos = await window.TMTDB.getAllTodos();
+    return todos.filter((todo) => todo.routineId === routineId);
   }
 
   async function renderRoutineHistory(routineId) {

@@ -373,6 +373,7 @@
     getAllNotes,
     getAllRoutineHistories,
     getAllRoutines,
+    getAllTodos,
     getBackupData,
     getNote,
     getRoutine,
