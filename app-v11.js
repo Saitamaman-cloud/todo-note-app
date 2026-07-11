@@ -155,6 +155,9 @@
                 <button class="primary-button" type="button" id="todo-copy-selected">コピーする</button>
                 <button class="secondary-button" type="button" id="todo-select-cancel">キャンセル</button>
               </div>
+              <div class="todo-select-status-zone">
+                <button class="secondary-button" type="button" id="todo-advance-selected">進める</button>
+              </div>
               <div class="todo-select-danger-zone">
                 <button class="danger-button" type="button" id="todo-delete-selected">選択したToDoを削除</button>
               </div>
@@ -500,6 +503,7 @@
     elements.todoSelectedCount = document.getElementById("todo-selected-count");
     elements.todoCopyDateInput = document.getElementById("todo-copy-date-input");
     elements.todoCopySelected = document.getElementById("todo-copy-selected");
+    elements.todoAdvanceSelected = document.getElementById("todo-advance-selected");
     elements.todoDeleteSelected = document.getElementById("todo-delete-selected");
     elements.todoSelectCancel = document.getElementById("todo-select-cancel");
     elements.todoList = document.getElementById("todo-list");
@@ -583,6 +587,7 @@
     elements.todoSelectMode.addEventListener("click", enterTodoSelectMode);
     elements.todoStartAll.addEventListener("click", startAllTodoItems);
     elements.todoCopySelected.addEventListener("click", copySelectedTodos);
+    elements.todoAdvanceSelected.addEventListener("click", advanceSelectedTodos);
     elements.todoDeleteSelected.addEventListener("click", deleteSelectedTodos);
     elements.todoSelectCancel.addEventListener("click", () => {
       clearTodoSelection();
@@ -1142,12 +1147,14 @@
     const todoCount = todos.length;
     const todoStatusCount = todos.filter((todo) => todo.status === "todo").length;
     const selectedCount = state.selectedTodoIds.size;
+    const selectedProgressableCount = todos.filter((todo) => state.selectedTodoIds.has(todo.id) && todo.status !== "done").length;
 
     elements.todoSelectPanel.hidden = !state.isTodoSelectMode;
     elements.todoSelectMode.disabled = !todoCount || state.isTodoSelectMode;
     elements.todoStartAll.disabled = state.isTodoSelectMode || !todoStatusCount;
     elements.todoCopyDateInput.value = state.isTodoSelectMode ? elements.todoCopyDateInput.value || addDays(state.selectedDate, 1) : "";
     elements.todoCopySelected.disabled = !selectedCount;
+    elements.todoAdvanceSelected.disabled = !selectedProgressableCount;
     elements.todoDeleteSelected.disabled = !selectedCount;
     elements.todoSelectedCount.textContent = `選択 ${selectedCount}件`;
   }
@@ -1256,6 +1263,41 @@
     } catch (error) {
       console.error("ToDo copy failed", error);
       showMessage("ToDoのコピーに失敗しました。", true);
+    }
+  }
+
+  async function advanceSelectedTodos() {
+    const ids = Array.from(state.selectedTodoIds);
+
+    if (!ids.length) {
+      showMessage("進めるToDoを選択してください。", true);
+      return;
+    }
+
+    try {
+      const todos = (await Promise.all(ids.map((id) => window.TMTDB.getTodo(id)))).filter(Boolean);
+      const targets = todos.map((todo) => ({ todo, nextStatus: getNextStatus(todo.status, "next") })).filter(({ nextStatus }) => Boolean(nextStatus));
+
+      if (!targets.length) {
+        showMessage("進められるToDoはありません。", true);
+        return;
+      }
+
+      await Promise.all(targets.map(({ todo, nextStatus }) => window.TMTDB.updateTodo({ ...todo, status: nextStatus })));
+      const doingCount = targets.filter(({ nextStatus }) => nextStatus === "doing").length;
+      const doneCount = targets.filter(({ nextStatus }) => nextStatus === "done").length;
+      const message = [
+        doingCount ? `${doingCount}件を対応中にしました。` : "",
+        doneCount ? `${doneCount}件を完了にしました。` : ""
+      ].filter(Boolean).join(" ");
+
+      clearTodoSelection();
+      showMessage(message);
+      renderTodo();
+      renderHome();
+    } catch (error) {
+      console.error("Selected ToDo advancement failed", error);
+      showMessage("選択したToDoの更新に失敗しました。", true);
     }
   }
 

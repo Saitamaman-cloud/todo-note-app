@@ -321,6 +321,7 @@ button:disabled {
   gap: 10px;
 }
 
+.todo-select-status-zone,
 .todo-select-danger-zone {
   display: grid;
   gap: 10px;
