@@ -148,7 +148,10 @@
             </div>
 
             <div class="todo-select-panel" id="todo-select-panel" hidden>
-              <p id="todo-selected-count">選択 0件</p>
+              <div class="todo-select-heading">
+                <p id="todo-selected-count">選択 0件</p>
+                <button class="secondary-button compact" type="button" id="todo-select-all">すべて選択</button>
+              </div>
               <label class="field-label compact-label todo-copy-date-label" for="todo-copy-date-input">コピー先日付</label>
               <input class="input" id="todo-copy-date-input" type="date">
               <div class="todo-select-actions">
@@ -502,6 +505,7 @@
     elements.todoStartAll = document.getElementById("todo-start-all");
     elements.todoSelectPanel = document.getElementById("todo-select-panel");
     elements.todoSelectedCount = document.getElementById("todo-selected-count");
+    elements.todoSelectAll = document.getElementById("todo-select-all");
     elements.todoCopyDateInput = document.getElementById("todo-copy-date-input");
     elements.todoCopySelected = document.getElementById("todo-copy-selected");
     elements.todoRevertSelected = document.getElementById("todo-revert-selected");
@@ -587,6 +591,7 @@
     });
     elements.todoForm.addEventListener("submit", handleAddTodo);
     elements.todoSelectMode.addEventListener("click", enterTodoSelectMode);
+    elements.todoSelectAll.addEventListener("click", selectAllTodos);
     elements.todoStartAll.addEventListener("click", startAllTodoItems);
     elements.todoCopySelected.addEventListener("click", copySelectedTodos);
     elements.todoRevertSelected.addEventListener("click", revertSelectedTodos);
@@ -1157,6 +1162,7 @@
     elements.todoSelectMode.disabled = !todoCount || state.isTodoSelectMode;
     elements.todoStartAll.disabled = state.isTodoSelectMode || !todoStatusCount;
     elements.todoCopyDateInput.value = state.isTodoSelectMode ? elements.todoCopyDateInput.value || addDays(state.selectedDate, 1) : "";
+    elements.todoSelectAll.disabled = !todoCount || selectedCount === todoCount;
     elements.todoCopySelected.disabled = !selectedCount;
     elements.todoRevertSelected.disabled = !selectedRevertableCount;
     elements.todoAdvanceSelected.disabled = !selectedProgressableCount;
@@ -1177,6 +1183,16 @@
     }
 
     state.selectedTodoIds.add(todoId);
+  }
+
+  async function selectAllTodos() {
+    try {
+      const todos = await window.TMTDB.getTodosByDate(state.selectedDate);
+      todos.forEach((todo) => state.selectedTodoIds.add(todo.id));
+      renderTodo();
+    } catch (error) {
+      showMessage("ToDoの選択に失敗しました。", true);
+    }
   }
 
   function clearTodoSelection() {
