@@ -305,6 +305,11 @@ button:disabled {
   font-weight: 800;
 }
 
+.todo-select-delete {
+  color: var(--danger);
+  justify-self: start;
+}
+
 .todo-select-actions,
 .button-row,
 .settings-actions,

@@ -143,16 +143,19 @@
             <input class="input" id="todo-date" type="date">
 
             <div class="todo-bulk-toolbar" aria-label="ToDoの一括操作">
-              <button class="secondary-button compact" type="button" id="todo-select-mode">選択</button>
+              <button class="secondary-button compact" type="button" id="todo-select-mode">選択コピー</button>
               <button class="secondary-button compact" type="button" id="todo-start-all">未着手を対応中へ</button>
             </div>
 
             <div class="todo-select-panel" id="todo-select-panel" hidden>
               <p id="todo-selected-count">選択 0件</p>
+              <label class="field-label compact-label" for="todo-copy-date-input">コピー先日付</label>
+              <input class="input" id="todo-copy-date-input" type="date">
               <div class="todo-select-actions">
-                <button class="danger-button" type="button" id="todo-delete-selected">選択削除</button>
+                <button class="primary-button" type="button" id="todo-copy-selected">コピーする</button>
                 <button class="secondary-button" type="button" id="todo-select-cancel">キャンセル</button>
               </div>
+              <button class="text-button todo-select-delete" type="button" id="todo-delete-selected">選択したToDoを削除</button>
             </div>
 
             <form class="add-form todo-add-form" id="todo-form">
@@ -493,6 +496,8 @@
     elements.todoStartAll = document.getElementById("todo-start-all");
     elements.todoSelectPanel = document.getElementById("todo-select-panel");
     elements.todoSelectedCount = document.getElementById("todo-selected-count");
+    elements.todoCopyDateInput = document.getElementById("todo-copy-date-input");
+    elements.todoCopySelected = document.getElementById("todo-copy-selected");
     elements.todoDeleteSelected = document.getElementById("todo-delete-selected");
     elements.todoSelectCancel = document.getElementById("todo-select-cancel");
     elements.todoList = document.getElementById("todo-list");
@@ -575,6 +580,7 @@
     elements.todoForm.addEventListener("submit", handleAddTodo);
     elements.todoSelectMode.addEventListener("click", enterTodoSelectMode);
     elements.todoStartAll.addEventListener("click", startAllTodoItems);
+    elements.todoCopySelected.addEventListener("click", copySelectedTodos);
     elements.todoDeleteSelected.addEventListener("click", deleteSelectedTodos);
     elements.todoSelectCancel.addEventListener("click", () => {
       clearTodoSelection();
@@ -1138,6 +1144,8 @@
     elements.todoSelectPanel.hidden = !state.isTodoSelectMode;
     elements.todoSelectMode.disabled = !todoCount || state.isTodoSelectMode;
     elements.todoStartAll.disabled = state.isTodoSelectMode || !todoStatusCount;
+    elements.todoCopyDateInput.value = state.isTodoSelectMode ? elements.todoCopyDateInput.value || addDays(state.selectedDate, 1) : "";
+    elements.todoCopySelected.disabled = !selectedCount;
     elements.todoDeleteSelected.disabled = !selectedCount;
     elements.todoSelectedCount.textContent = `選択 ${selectedCount}件`;
   }
@@ -1193,6 +1201,64 @@
     } catch (error) {
       showMessage("選択したToDoの削除に失敗しました。", true);
     }
+  }
+
+  async function copySelectedTodos() {
+    const ids = Array.from(state.selectedTodoIds);
+    const targetDate = elements.todoCopyDateInput.value || "";
+
+    if (!ids.length) {
+      showMessage("コピーするToDoを選択してください。", true);
+      return;
+    }
+
+    if (!targetDate) {
+      showMessage("コピー先の日付を指定してください。", true);
+      return;
+    }
+
+    try {
+      const [selectedTodos, targetTodos] = await Promise.all([
+        Promise.all(ids.map((id) => window.TMTDB.getTodo(id))),
+        window.TMTDB.getTodosByDate(targetDate)
+      ]);
+      const duplicateKeys = new Set(targetTodos.map((todo) => getTodoDuplicateKey(todo)));
+      let copiedCount = 0;
+      let skippedCount = 0;
+
+      for (const todo of selectedTodos.filter(Boolean)) {
+        const duplicateKey = getTodoDuplicateKey(todo);
+
+        if (duplicateKeys.has(duplicateKey)) {
+          skippedCount += 1;
+          continue;
+        }
+
+        // addTodo creates a new ID and resets the status. Routine metadata is intentionally not copied.
+        await window.TMTDB.addTodo(todo.title, targetDate, todo.time || "");
+        duplicateKeys.add(duplicateKey);
+        copiedCount += 1;
+      }
+
+      if (!copiedCount) {
+        showMessage("コピー先に同じToDoがあるため、追加しませんでした。", true);
+        return;
+      }
+
+      clearTodoSelection();
+      setSelectedDate(targetDate);
+      const skippedMessage = skippedCount ? ` ${skippedCount}件は重複のためスキップしました。` : "";
+      showMessage(`${targetDate} に ${copiedCount}件コピーしました。${skippedMessage}`);
+      renderTodo();
+      renderHome();
+    } catch (error) {
+      console.error("ToDo copy failed", error);
+      showMessage("ToDoのコピーに失敗しました。", true);
+    }
+  }
+
+  function getTodoDuplicateKey(todo) {
+    return `${todo.title || ""}\u0000${todo.time || ""}`;
   }
 
   async function deleteTodoWithRoutineMemory(todo) {
