@@ -1307,7 +1307,6 @@
         doneCount ? `${doneCount}件を完了にしました。` : ""
       ].filter(Boolean).join(" ");
 
-      clearTodoSelection();
       showMessage(message);
       renderTodo();
       renderHome();
