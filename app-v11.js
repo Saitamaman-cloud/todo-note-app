@@ -150,8 +150,8 @@
             <div class="todo-select-panel" id="todo-select-panel" hidden>
               <div class="todo-select-heading">
                 <p id="todo-selected-count">選択 0件</p>
-                <button class="secondary-button compact" type="button" id="todo-select-all">すべて選択</button>
               </div>
+              <button class="secondary-button" type="button" id="todo-select-all">すべて選択</button>
               <label class="field-label compact-label todo-copy-date-label" for="todo-copy-date-input">コピー先日付</label>
               <input class="input" id="todo-copy-date-input" type="date">
               <div class="todo-select-actions">

@@ -308,12 +308,7 @@ button:disabled {
 .todo-select-heading {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
-}
-
-.todo-select-heading .compact {
-  flex: 0 0 auto;
 }
 
 .todo-copy-date-label {
