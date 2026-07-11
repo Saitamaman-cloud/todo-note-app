@@ -156,6 +156,7 @@
                 <button class="secondary-button" type="button" id="todo-select-cancel">キャンセル</button>
               </div>
               <div class="todo-select-status-zone">
+                <button class="secondary-button" type="button" id="todo-revert-selected">戻る</button>
                 <button class="secondary-button" type="button" id="todo-advance-selected">進める</button>
               </div>
               <div class="todo-select-danger-zone">
@@ -503,6 +504,7 @@
     elements.todoSelectedCount = document.getElementById("todo-selected-count");
     elements.todoCopyDateInput = document.getElementById("todo-copy-date-input");
     elements.todoCopySelected = document.getElementById("todo-copy-selected");
+    elements.todoRevertSelected = document.getElementById("todo-revert-selected");
     elements.todoAdvanceSelected = document.getElementById("todo-advance-selected");
     elements.todoDeleteSelected = document.getElementById("todo-delete-selected");
     elements.todoSelectCancel = document.getElementById("todo-select-cancel");
@@ -587,6 +589,7 @@
     elements.todoSelectMode.addEventListener("click", enterTodoSelectMode);
     elements.todoStartAll.addEventListener("click", startAllTodoItems);
     elements.todoCopySelected.addEventListener("click", copySelectedTodos);
+    elements.todoRevertSelected.addEventListener("click", revertSelectedTodos);
     elements.todoAdvanceSelected.addEventListener("click", advanceSelectedTodos);
     elements.todoDeleteSelected.addEventListener("click", deleteSelectedTodos);
     elements.todoSelectCancel.addEventListener("click", () => {
@@ -1148,12 +1151,14 @@
     const todoStatusCount = todos.filter((todo) => todo.status === "todo").length;
     const selectedCount = state.selectedTodoIds.size;
     const selectedProgressableCount = todos.filter((todo) => state.selectedTodoIds.has(todo.id) && todo.status !== "done").length;
+    const selectedRevertableCount = todos.filter((todo) => state.selectedTodoIds.has(todo.id) && todo.status !== "todo").length;
 
     elements.todoSelectPanel.hidden = !state.isTodoSelectMode;
     elements.todoSelectMode.disabled = !todoCount || state.isTodoSelectMode;
     elements.todoStartAll.disabled = state.isTodoSelectMode || !todoStatusCount;
     elements.todoCopyDateInput.value = state.isTodoSelectMode ? elements.todoCopyDateInput.value || addDays(state.selectedDate, 1) : "";
     elements.todoCopySelected.disabled = !selectedCount;
+    elements.todoRevertSelected.disabled = !selectedRevertableCount;
     elements.todoAdvanceSelected.disabled = !selectedProgressableCount;
     elements.todoDeleteSelected.disabled = !selectedCount;
     elements.todoSelectedCount.textContent = `選択 ${selectedCount}件`;
@@ -1267,26 +1272,37 @@
   }
 
   async function advanceSelectedTodos() {
+    await moveSelectedTodos("next");
+  }
+
+  async function revertSelectedTodos() {
+    await moveSelectedTodos("back");
+  }
+
+  async function moveSelectedTodos(action) {
     const ids = Array.from(state.selectedTodoIds);
+    const isAdvancing = action === "next";
 
     if (!ids.length) {
-      showMessage("進めるToDoを選択してください。", true);
+      showMessage(`${isAdvancing ? "進める" : "戻す"}ToDoを選択してください。`, true);
       return;
     }
 
     try {
       const todos = (await Promise.all(ids.map((id) => window.TMTDB.getTodo(id)))).filter(Boolean);
-      const targets = todos.map((todo) => ({ todo, nextStatus: getNextStatus(todo.status, "next") })).filter(({ nextStatus }) => Boolean(nextStatus));
+      const targets = todos.map((todo) => ({ todo, nextStatus: getNextStatus(todo.status, action) })).filter(({ nextStatus }) => Boolean(nextStatus));
 
       if (!targets.length) {
-        showMessage("進められるToDoはありません。", true);
+        showMessage(`${isAdvancing ? "進められる" : "戻せる"}ToDoはありません。`, true);
         return;
       }
 
       await Promise.all(targets.map(({ todo, nextStatus }) => window.TMTDB.updateTodo({ ...todo, status: nextStatus })));
+      const todoCount = targets.filter(({ nextStatus }) => nextStatus === "todo").length;
       const doingCount = targets.filter(({ nextStatus }) => nextStatus === "doing").length;
       const doneCount = targets.filter(({ nextStatus }) => nextStatus === "done").length;
       const message = [
+        todoCount ? `${todoCount}件を未着手にしました。` : "",
         doingCount ? `${doingCount}件を対応中にしました。` : "",
         doneCount ? `${doneCount}件を完了にしました。` : ""
       ].filter(Boolean).join(" ");
@@ -1296,7 +1312,7 @@
       renderTodo();
       renderHome();
     } catch (error) {
-      console.error("Selected ToDo advancement failed", error);
+      console.error("Selected ToDo status update failed", error);
       showMessage("選択したToDoの更新に失敗しました。", true);
     }
   }
