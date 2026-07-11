@@ -305,9 +305,10 @@ button:disabled {
   font-weight: 800;
 }
 
-.todo-select-delete {
-  color: var(--danger);
-  justify-self: start;
+.todo-copy-date-label {
+  color: var(--accent-dark);
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 .todo-select-actions,
@@ -318,6 +319,13 @@ button:disabled {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+}
+
+.todo-select-danger-zone {
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
 }
 
 .settings-actions,

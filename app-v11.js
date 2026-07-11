@@ -143,19 +143,21 @@
             <input class="input" id="todo-date" type="date">
 
             <div class="todo-bulk-toolbar" aria-label="ToDoの一括操作">
-              <button class="secondary-button compact" type="button" id="todo-select-mode">選択コピー</button>
+              <button class="secondary-button compact" type="button" id="todo-select-mode">ToDo項目選択</button>
               <button class="secondary-button compact" type="button" id="todo-start-all">未着手を対応中へ</button>
             </div>
 
             <div class="todo-select-panel" id="todo-select-panel" hidden>
               <p id="todo-selected-count">選択 0件</p>
-              <label class="field-label compact-label" for="todo-copy-date-input">コピー先日付</label>
+              <label class="field-label compact-label todo-copy-date-label" for="todo-copy-date-input">コピー先日付</label>
               <input class="input" id="todo-copy-date-input" type="date">
               <div class="todo-select-actions">
                 <button class="primary-button" type="button" id="todo-copy-selected">コピーする</button>
                 <button class="secondary-button" type="button" id="todo-select-cancel">キャンセル</button>
               </div>
-              <button class="text-button todo-select-delete" type="button" id="todo-delete-selected">選択したToDoを削除</button>
+              <div class="todo-select-danger-zone">
+                <button class="danger-button" type="button" id="todo-delete-selected">選択したToDoを削除</button>
+              </div>
             </div>
 
             <form class="add-form todo-add-form" id="todo-form">
