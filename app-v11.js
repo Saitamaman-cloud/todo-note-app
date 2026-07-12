@@ -30,6 +30,9 @@
   const DEFAULT_CATEGORIES = ["掃除", "洗濯", "ゴミ", "買い物", "ペット", "健康", "手続き", "家計", "車", "その他"];
   const ROUTINE_TODO_EXPANSION_DAYS = 90;
   const ROUTINE_TODO_EXPANSION_LIMIT = 60;
+  const NOTE_EDITOR_MIN_HEIGHT = 160;
+  const NOTE_EDITOR_MAX_HEIGHT = 720;
+  const NOTE_EDITOR_EXPANDED_HEIGHT = 400;
 
   const state = {
     currentView: "home",
@@ -38,6 +41,7 @@
     selectedTodo: null,
     isEditingTodo: false,
     todoEditAutoSaveTimer: null,
+    noteResize: null,
     isTodoSelectMode: false,
     selectedTodoIds: new Set(),
     calendarYear: new Date().getFullYear(),
@@ -293,7 +297,10 @@
             <input class="input" id="note-title-input" type="text" placeholder="タイトル">
 
             <label class="field-label" for="note-body-input">本文</label>
-            <textarea class="textarea" id="note-body-input" placeholder="自由にメモを書く"></textarea>
+            <div class="note-body-resize">
+              <textarea class="textarea" id="note-body-input" placeholder="自由にメモを書く"></textarea>
+              <button class="note-resize-handle" type="button" id="note-resize-handle" aria-label="メモ欄の高さを変更" title="メモ欄の高さを変更"><span aria-hidden="true">↘</span></button>
+            </div>
 
             <div class="button-row">
               <button class="primary-button" type="button" id="save-note-button">保存</button>
@@ -541,6 +548,7 @@
     elements.backToNotes = document.getElementById("back-to-notes");
     elements.noteTitleInput = document.getElementById("note-title-input");
     elements.noteBodyInput = document.getElementById("note-body-input");
+    elements.noteResizeHandle = document.getElementById("note-resize-handle");
     elements.saveNoteButton = document.getElementById("save-note-button");
     elements.deleteNoteButton = document.getElementById("delete-note-button");
     elements.newRoutineButton = document.getElementById("new-routine-button");
@@ -619,6 +627,10 @@
     elements.noteSearch.addEventListener("input", renderNotes);
     elements.noteList.addEventListener("click", handleNoteOpen);
     elements.backToNotes.addEventListener("click", () => navigate("notes"));
+    elements.noteResizeHandle.addEventListener("pointerdown", startNoteResize);
+    elements.noteResizeHandle.addEventListener("pointermove", resizeNoteEditor);
+    elements.noteResizeHandle.addEventListener("pointerup", finishNoteResize);
+    elements.noteResizeHandle.addEventListener("pointercancel", finishNoteResize);
     elements.saveNoteButton.addEventListener("click", handleSaveNote);
     elements.deleteNoteButton.addEventListener("click", handleDeleteNote);
     elements.newRoutineButton.addEventListener("click", () => navigate("routine-new"));
@@ -1480,6 +1492,8 @@
 
   async function loadEditor() {
     try {
+      applyNoteEditorHeight(getSavedNoteEditorHeight());
+
       if (!state.editingNoteId) {
         state.editingNote = null;
         elements.noteTitleInput.value = "";
@@ -1502,6 +1516,61 @@
       elements.deleteNoteButton.disabled = false;
     } catch (error) {
       showMessage("メモの読み込みに失敗しました。", true);
+    }
+  }
+
+  function startNoteResize(event) {
+    const height = elements.noteBodyInput.getBoundingClientRect().height;
+    state.noteResize = {
+      pointerId: event.pointerId,
+      startY: event.clientY,
+      startHeight: height,
+      moved: false
+    };
+    elements.noteResizeHandle.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  }
+
+  function resizeNoteEditor(event) {
+    if (!state.noteResize || state.noteResize.pointerId !== event.pointerId) {
+      return;
+    }
+
+    const delta = event.clientY - state.noteResize.startY;
+    state.noteResize.moved = state.noteResize.moved || Math.abs(delta) > 4;
+    applyNoteEditorHeight(state.noteResize.startHeight + delta);
+    event.preventDefault();
+  }
+
+  function finishNoteResize(event) {
+    if (!state.noteResize || state.noteResize.pointerId !== event.pointerId) {
+      return;
+    }
+
+    if (!state.noteResize.moved) {
+      const currentHeight = elements.noteBodyInput.getBoundingClientRect().height;
+      applyNoteEditorHeight(currentHeight < NOTE_EDITOR_EXPANDED_HEIGHT ? NOTE_EDITOR_EXPANDED_HEIGHT : NOTE_EDITOR_MIN_HEIGHT);
+    }
+
+    state.noteResize = null;
+  }
+
+  function applyNoteEditorHeight(height) {
+    const nextHeight = Math.round(Math.min(NOTE_EDITOR_MAX_HEIGHT, Math.max(NOTE_EDITOR_MIN_HEIGHT, height)));
+    elements.noteBodyInput.style.height = `${nextHeight}px`;
+
+    try {
+      localStorage.setItem("today-memo-todo-note-editor-height", String(nextHeight));
+    } catch (error) {
+      // The editor remains resizable even when browser storage is unavailable.
+    }
+  }
+
+  function getSavedNoteEditorHeight() {
+    try {
+      return Number(localStorage.getItem("today-memo-todo-note-editor-height")) || NOTE_EDITOR_MIN_HEIGHT;
+    } catch (error) {
+      return NOTE_EDITOR_MIN_HEIGHT;
     }
   }
 

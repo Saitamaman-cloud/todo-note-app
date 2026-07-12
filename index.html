@@ -9,7 +9,7 @@
   <title>今日メモTodo</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style-v11.css?v=26">
+  <link rel="stylesheet" href="style-v11.css?v=27">
 </head>
 <body>
   <div class="app-shell">
@@ -209,8 +209,11 @@
         <label class="field-label" for="note-title-input">タイトル</label>
         <input class="input" id="note-title-input" type="text" placeholder="タイトル">
 
-        <label class="field-label" for="note-body-input">本文</label>
-        <textarea class="textarea" id="note-body-input" placeholder="自由にメモを書く"></textarea>
+            <label class="field-label" for="note-body-input">本文</label>
+            <div class="note-body-resize">
+              <textarea class="textarea" id="note-body-input" placeholder="自由にメモを書く"></textarea>
+              <button class="note-resize-handle" type="button" id="note-resize-handle" aria-label="メモ欄の高さを変更" title="メモ欄の高さを変更"><span aria-hidden="true">↘</span></button>
+            </div>
 
         <div class="button-row">
           <button class="primary-button" type="button" id="save-note-button">保存</button>
@@ -265,7 +268,7 @@
     </nav>
   </div>
 
-  <script src="db-v11.js?v=26"></script>
-  <script src="app-v11.js?v=26"></script>
+  <script src="db-v11.js?v=27"></script>
+  <script src="app-v11.js?v=27"></script>
 </body>
 </html>

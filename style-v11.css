@@ -206,7 +206,33 @@ button:disabled {
 .textarea {
   min-height: 120px;
   padding: 14px;
-  resize: vertical;
+  resize: none;
+}
+
+.note-body-resize {
+  position: relative;
+}
+
+.note-body-resize .textarea {
+  display: block;
+  min-height: 160px;
+  padding-bottom: 56px;
+}
+
+.note-resize-handle {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--accent-dark);
+  cursor: ns-resize;
+  font-size: 1.35rem;
+  font-weight: 800;
+  touch-action: none;
 }
 
 .input:focus,
