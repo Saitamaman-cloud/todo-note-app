@@ -37,6 +37,7 @@
     selectedTodoId: null,
     selectedTodo: null,
     isEditingTodo: false,
+    todoEditAutoSaveTimer: null,
     isTodoSelectMode: false,
     selectedTodoIds: new Set(),
     calendarYear: new Date().getFullYear(),
@@ -234,8 +235,7 @@
                 <input class="input" id="todo-edit-title-input" type="text" autocomplete="off" placeholder="ToDoの内容">
 
                 <div class="todo-edit-actions">
-                  <button class="primary-button" type="button" id="todo-edit-save">保存</button>
-                  <button class="secondary-button" type="button" id="todo-edit-cancel">キャンセル</button>
+                  <button class="secondary-button wide" type="button" id="todo-edit-cancel">編集を終了</button>
                 </div>
               </div>
             </div>
@@ -528,7 +528,6 @@
     elements.todoEditDateInput = document.getElementById("todo-edit-date-input");
     elements.todoEditTimeInput = document.getElementById("todo-edit-time-input");
     elements.todoEditTitleInput = document.getElementById("todo-edit-title-input");
-    elements.todoEditSave = document.getElementById("todo-edit-save");
     elements.todoEditCancel = document.getElementById("todo-edit-cancel");
     elements.calendarPrev = document.getElementById("calendar-prev");
     elements.calendarToday = document.getElementById("calendar-today");
@@ -607,8 +606,10 @@
     elements.todoDetailBack.addEventListener("click", () => handleTodoDetailAction("back"));
     elements.todoDetailNext.addEventListener("click", () => handleTodoDetailAction("next"));
     elements.todoDetailDelete.addEventListener("click", () => handleTodoDetailAction("delete"));
-    elements.todoEditSave.addEventListener("click", saveTodoEdit);
-    elements.todoEditCancel.addEventListener("click", cancelTodoEdit);
+    elements.todoEditDateInput.addEventListener("change", autoSaveTodoEdit);
+    elements.todoEditTimeInput.addEventListener("change", autoSaveTodoEdit);
+    elements.todoEditTitleInput.addEventListener("input", scheduleTodoEditAutoSave);
+    elements.todoEditCancel.addEventListener("click", finishTodoEdit);
     elements.calendarPrev.addEventListener("click", () => moveCalendarMonth(-1));
     elements.calendarToday.addEventListener("click", showCurrentCalendarMonth);
     elements.calendarNext.addEventListener("click", () => moveCalendarMonth(1));
@@ -1078,8 +1079,13 @@
     renderTodoDetail(state.selectedTodo, true);
   }
 
-  async function saveTodoEdit() {
-    if (!state.selectedTodo) {
+  function scheduleTodoEditAutoSave() {
+    window.clearTimeout(state.todoEditAutoSaveTimer);
+    state.todoEditAutoSaveTimer = window.setTimeout(autoSaveTodoEdit, 500);
+  }
+
+  async function autoSaveTodoEdit() {
+    if (!state.selectedTodo || !state.isEditingTodo) {
       return;
     }
 
@@ -1087,13 +1093,11 @@
     const date = elements.todoEditDateInput.value || "";
     const time = elements.todoEditTimeInput.value || "";
 
-    if (!date) {
-      showMessage("日付を入力してください。", true);
+    if (!date || !title) {
       return;
     }
 
-    if (!title) {
-      showMessage("ToDoの内容を入力してください。", true);
+    if (state.selectedTodo.date === date && state.selectedTodo.time === time && state.selectedTodo.title === title) {
       return;
     }
 
@@ -1101,19 +1105,19 @@
       state.selectedTodo = await window.TMTDB.updateTodo({ ...state.selectedTodo, date, title, time });
       setSelectedDate(state.selectedTodo.date);
       renderTodo();
-      renderTodoDetail(state.selectedTodo, false);
-      showMessage("ToDoを保存しました。");
       renderHome();
     } catch (error) {
-      showMessage("ToDoの保存に失敗しました。", true);
+      showMessage("ToDoの自動保存に失敗しました。", true);
     }
   }
 
-  function cancelTodoEdit() {
+  async function finishTodoEdit() {
     if (!state.selectedTodo) {
       return;
     }
 
+    window.clearTimeout(state.todoEditAutoSaveTimer);
+    await autoSaveTodoEdit();
     renderTodoDetail(state.selectedTodo, false);
   }
 
