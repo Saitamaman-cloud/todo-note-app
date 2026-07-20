@@ -167,6 +167,10 @@
                 <button class="secondary-button" type="button" id="todo-revert-selected">戻る</button>
                 <button class="secondary-button" type="button" id="todo-advance-selected">進める</button>
               </div>
+              <div class="todo-select-priority-zone">
+                <button class="priority-button" type="button" id="todo-prioritize-selected">優先にする</button>
+                <button class="secondary-button" type="button" id="todo-unprioritize-selected">優先を解除</button>
+              </div>
               <div class="todo-select-danger-zone">
                 <button class="danger-button" type="button" id="todo-delete-selected">選択したToDoを削除</button>
               </div>
@@ -517,6 +521,8 @@
     elements.todoCopySelected = document.getElementById("todo-copy-selected");
     elements.todoRevertSelected = document.getElementById("todo-revert-selected");
     elements.todoAdvanceSelected = document.getElementById("todo-advance-selected");
+    elements.todoPrioritizeSelected = document.getElementById("todo-prioritize-selected");
+    elements.todoUnprioritizeSelected = document.getElementById("todo-unprioritize-selected");
     elements.todoDeleteSelected = document.getElementById("todo-delete-selected");
     elements.todoSelectCancel = document.getElementById("todo-select-cancel");
     elements.todoList = document.getElementById("todo-list");
@@ -603,6 +609,8 @@
     elements.todoCopySelected.addEventListener("click", copySelectedTodos);
     elements.todoRevertSelected.addEventListener("click", revertSelectedTodos);
     elements.todoAdvanceSelected.addEventListener("click", advanceSelectedTodos);
+    elements.todoPrioritizeSelected.addEventListener("click", () => setSelectedTodosPriority(true));
+    elements.todoUnprioritizeSelected.addEventListener("click", () => setSelectedTodosPriority(false));
     elements.todoDeleteSelected.addEventListener("click", deleteSelectedTodos);
     elements.todoSelectCancel.addEventListener("click", () => {
       clearTodoSelection();
@@ -1135,7 +1143,7 @@
 
   function createTodoItem(todo) {
     const row = state.isTodoSelectMode ? document.createElement("label") : document.createElement("button");
-    row.className = `todo-row ${state.isTodoSelectMode ? "is-selectable" : ""} ${todo.status === "done" ? "is-done" : ""}`;
+    row.className = `todo-row ${state.isTodoSelectMode ? "is-selectable" : ""} ${todo.status === "done" ? "is-done" : ""} ${todo.isPriority === true ? "is-priority" : ""}`;
     row.dataset.todoId = todo.id;
 
     if (!state.isTodoSelectMode) {
@@ -1163,7 +1171,18 @@
     badge.className = `status-badge status-${todo.status}`;
     badge.textContent = STATUS_LABELS[todo.status] || STATUS_LABELS.todo;
 
-    row.append(time, title, badge);
+    const badges = document.createElement("span");
+    badges.className = "todo-row-badges";
+
+    if (todo.isPriority === true) {
+      const priorityBadge = document.createElement("span");
+      priorityBadge.className = "priority-badge";
+      priorityBadge.textContent = "優先";
+      badges.append(priorityBadge);
+    }
+
+    badges.append(badge);
+    row.append(time, title, badges);
     return row;
   }
 
@@ -1182,6 +1201,8 @@
     elements.todoCopySelected.disabled = !selectedCount;
     elements.todoRevertSelected.disabled = !selectedRevertableCount;
     elements.todoAdvanceSelected.disabled = !selectedProgressableCount;
+    elements.todoPrioritizeSelected.disabled = !selectedCount;
+    elements.todoUnprioritizeSelected.disabled = !selectedCount;
     elements.todoDeleteSelected.disabled = !selectedCount;
     elements.todoSelectedCount.textContent = `選択 ${selectedCount}件`;
   }
@@ -1345,6 +1366,33 @@
     } catch (error) {
       console.error("Selected ToDo status update failed", error);
       showMessage("選択したToDoの更新に失敗しました。", true);
+    }
+  }
+
+  async function setSelectedTodosPriority(isPriority) {
+    const ids = Array.from(state.selectedTodoIds);
+
+    if (!ids.length) {
+      showMessage("優先状態を変更するToDoを選択してください。", true);
+      return;
+    }
+
+    try {
+      const todos = (await Promise.all(ids.map((id) => window.TMTDB.getTodo(id)))).filter(Boolean);
+      const targets = todos.filter((todo) => todo.isPriority === true !== isPriority);
+
+      if (!targets.length) {
+        showMessage(isPriority ? "選択したToDoはすでに優先になっています。" : "選択したToDoの優先はすでに解除されています。");
+        return;
+      }
+
+      await Promise.all(targets.map((todo) => window.TMTDB.updateTodo({ ...todo, isPriority })));
+      showMessage(`${targets.length}件を${isPriority ? "優先にしました" : "優先から解除しました"}。`);
+      renderTodo();
+      renderHome();
+    } catch (error) {
+      console.error("Selected ToDo priority update failed", error);
+      showMessage("選択したToDoの優先状態を変更できませんでした。", true);
     }
   }
 

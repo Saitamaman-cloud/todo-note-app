@@ -354,6 +354,7 @@ button:disabled {
 }
 
 .todo-select-status-zone,
+.todo-select-priority-zone,
 .todo-select-danger-zone {
   display: grid;
   gap: 10px;
@@ -361,7 +362,8 @@ button:disabled {
   border-top: 1px solid var(--line);
 }
 
-.todo-select-status-zone {
+.todo-select-status-zone,
+.todo-select-priority-zone {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -373,6 +375,7 @@ button:disabled {
 
 .primary-button,
 .secondary-button,
+.priority-button,
 .danger-button,
 .text-button {
   min-height: 46px;
@@ -395,6 +398,12 @@ button:disabled {
   border: 1px solid var(--line);
   background: var(--surface);
   color: var(--accent-dark);
+}
+
+.priority-button {
+  border: 1px solid #d96c8a;
+  background: #f8dce5;
+  color: #8f2848;
 }
 
 .danger-button {
@@ -484,6 +493,12 @@ button:disabled {
   text-decoration: line-through;
 }
 
+.todo-row.is-priority {
+  border-color: #df8ca3;
+  background: #fff0f4;
+  box-shadow: inset 4px 0 0 #d95f7f, var(--shadow);
+}
+
 .todo-row-title {
   min-width: 0;
   overflow: hidden;
@@ -493,9 +508,23 @@ button:disabled {
   white-space: nowrap;
 }
 
-.todo-row .status-badge {
+.todo-row-badges {
+  display: grid;
+  gap: 4px;
+  justify-items: end;
+}
+
+.todo-row .status-badge,
+.todo-row .priority-badge {
   padding: 5px 9px;
   font-size: 0.78rem;
+}
+
+.priority-badge {
+  border-radius: 999px;
+  background: #d95f7f;
+  color: #ffffff;
+  font-weight: 800;
 }
 
 .todo-detail-title {
