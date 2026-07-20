@@ -226,3 +226,5 @@ today-memo-todo-backup-YYYYMMDD.json
 - `service-worker.js` が登録され、主要ファイルがキャッシュされる。
 - オフライン状態でもアプリ画面が起動する。
 
+
+
