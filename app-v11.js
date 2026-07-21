@@ -161,8 +161,9 @@
               <input class="input" id="todo-copy-date-input" type="date">
               <div class="todo-select-actions">
                 <button class="primary-button" type="button" id="todo-copy-selected">コピーする</button>
-                <button class="secondary-button" type="button" id="todo-select-cancel">キャンセル</button>
+                <button class="secondary-button" type="button" id="todo-move-selected">移動する</button>
               </div>
+              <button class="secondary-button" type="button" id="todo-select-cancel">キャンセル</button>
               <div class="todo-select-status-zone">
                 <button class="secondary-button" type="button" id="todo-revert-selected">戻る</button>
                 <button class="secondary-button" type="button" id="todo-advance-selected">進める</button>
@@ -519,6 +520,7 @@
     elements.todoSelectAll = document.getElementById("todo-select-all");
     elements.todoCopyDateInput = document.getElementById("todo-copy-date-input");
     elements.todoCopySelected = document.getElementById("todo-copy-selected");
+    elements.todoMoveSelected = document.getElementById("todo-move-selected");
     elements.todoRevertSelected = document.getElementById("todo-revert-selected");
     elements.todoAdvanceSelected = document.getElementById("todo-advance-selected");
     elements.todoPrioritizeSelected = document.getElementById("todo-prioritize-selected");
@@ -607,6 +609,7 @@
     elements.todoSelectAll.addEventListener("click", selectAllTodos);
     elements.todoStartAll.addEventListener("click", startAllTodoItems);
     elements.todoCopySelected.addEventListener("click", copySelectedTodos);
+    elements.todoMoveSelected.addEventListener("click", moveSelectedTodosToDate);
     elements.todoRevertSelected.addEventListener("click", revertSelectedTodos);
     elements.todoAdvanceSelected.addEventListener("click", advanceSelectedTodos);
     elements.todoPrioritizeSelected.addEventListener("click", () => setSelectedTodosPriority(true));
@@ -1199,6 +1202,7 @@
     elements.todoCopyDateInput.value = state.isTodoSelectMode ? elements.todoCopyDateInput.value || addDays(state.selectedDate, 1) : "";
     elements.todoSelectAll.disabled = !todoCount || selectedCount === todoCount;
     elements.todoCopySelected.disabled = !selectedCount;
+    elements.todoMoveSelected.disabled = !selectedCount;
     elements.todoRevertSelected.disabled = !selectedRevertableCount;
     elements.todoAdvanceSelected.disabled = !selectedProgressableCount;
     elements.todoPrioritizeSelected.disabled = !selectedCount;
@@ -1321,6 +1325,42 @@
     } catch (error) {
       console.error("ToDo copy failed", error);
       showMessage("ToDoのコピーに失敗しました。", true);
+    }
+  }
+
+  // 選択したToDoの予定日だけを変更し、他の情報を保ったまま移動する。
+  async function moveSelectedTodosToDate() {
+    const ids = Array.from(state.selectedTodoIds);
+    const targetDate = elements.todoCopyDateInput.value || "";
+
+    if (!ids.length) {
+      showMessage("移動するToDoを選択してください。", true);
+      return;
+    }
+
+    if (!targetDate) {
+      showMessage("移動先の日付を指定してください。", true);
+      return;
+    }
+
+    try {
+      const selectedTodos = await Promise.all(ids.map((id) => window.TMTDB.getTodo(id)));
+      const targets = selectedTodos.filter(Boolean);
+
+      if (!targets.length) {
+        showMessage("移動するToDoが見つかりません。", true);
+        return;
+      }
+
+      await Promise.all(targets.map((todo) => window.TMTDB.updateTodo({ ...todo, date: targetDate })));
+      clearTodoSelection();
+      setSelectedDate(targetDate);
+      showMessage(`${targetDate} に ${targets.length}件移動しました。`);
+      renderTodo();
+      renderHome();
+    } catch (error) {
+      console.error("ToDo move failed", error);
+      showMessage("ToDoの移動に失敗しました。", true);
     }
   }
 
