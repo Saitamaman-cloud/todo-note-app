@@ -9,7 +9,7 @@
   <title>今日メモTodo</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style-v12.css?v=15">
+  <link rel="stylesheet" href="style-v12.css?v=16">
 </head>
 <body>
   <div class="app-shell">
@@ -357,21 +357,37 @@
             <button class="primary-button wide" type="submit" id="shared-submit">共有家事を追加</button>
           </form>
 
-          <div class="shared-filters" aria-label="共有家事の絞り込み">
-            <label>
-              <span class="field-label compact-label">担当者</span>
-              <select class="input" id="shared-filter-assignee">
-                <option value="all">すべての担当者</option>
+          <div class="shared-list-toolbar">
+            <label for="shared-display-mode">
+              <span class="field-label compact-label">一覧の表示</span>
+              <select class="input" id="shared-display-mode">
+                <option value="compact">コンパクト表示</option>
+                <option value="detail">詳細表示</option>
               </select>
             </label>
-            <label class="checkbox-control">
-              <input id="shared-filter-self" type="checkbox">
-              <span>自分の担当だけ</span>
-            </label>
-            <label class="checkbox-control">
-              <input id="shared-filter-completed" type="checkbox">
-              <span>完了済みを含める</span>
-            </label>
+            <details class="shared-filter-panel" id="shared-filter-panel">
+              <summary>絞り込み</summary>
+              <div class="shared-filters" aria-label="共有家事の絞り込み">
+                <label>
+                  <span class="field-label compact-label">担当者</span>
+                  <select class="input" id="shared-filter-assignee">
+                    <option value="all">すべての担当者</option>
+                  </select>
+                </label>
+                <label class="checkbox-control">
+                  <input id="shared-filter-self" type="checkbox">
+                  <span>自分の担当だけ</span>
+                </label>
+                <label class="checkbox-control">
+                  <input id="shared-filter-priority" type="checkbox">
+                  <span>優先だけ</span>
+                </label>
+                <label class="checkbox-control">
+                  <input id="shared-filter-completed" type="checkbox">
+                  <span>完了済みを含める</span>
+                </label>
+              </div>
+            </details>
           </div>
 
           <div class="list shared-todo-list" id="shared-todo-list"></div>
@@ -383,6 +399,59 @@
             <button class="danger-button wide" type="button" id="shared-leave">家族グループから脱退</button>
             <button class="danger-button wide" type="button" id="shared-delete-household">家族グループを削除</button>
           </div>
+
+          <dialog class="shared-todo-detail-dialog" id="shared-todo-detail-dialog">
+            <form class="dialog-card shared-detail-form" id="shared-todo-detail-form">
+              <div class="shared-detail-header">
+                <div>
+                  <p class="muted shared-small-text">共有家事の詳細</p>
+                  <h2>内容の確認・編集</h2>
+                </div>
+                <button class="text-button" type="button" id="shared-detail-close" aria-label="詳細を閉じる">閉じる</button>
+              </div>
+
+              <label class="field-label" for="shared-detail-title">内容</label>
+              <input class="input" id="shared-detail-title" type="text" maxlength="200" required>
+
+              <div class="shared-form-grid">
+                <div>
+                  <label class="field-label" for="shared-detail-date">予定日</label>
+                  <input class="input" id="shared-detail-date" type="date" required>
+                </div>
+                <div>
+                  <label class="field-label" for="shared-detail-time">時刻（任意）</label>
+                  <input class="input" id="shared-detail-time" type="time">
+                </div>
+                <div>
+                  <label class="field-label" for="shared-detail-assignee">担当者</label>
+                  <select class="input" id="shared-detail-assignee"></select>
+                </div>
+                <div>
+                  <label class="field-label" for="shared-detail-status">ステータス</label>
+                  <select class="input" id="shared-detail-status">
+                    <option value="todo">未着手</option>
+                    <option value="doing">対応中</option>
+                    <option value="done">完了</option>
+                  </select>
+                </div>
+              </div>
+
+              <label class="checkbox-control shared-priority-control">
+                <input id="shared-detail-priority" type="checkbox">
+                <span>優先表示する</span>
+              </label>
+
+              <p class="shared-todo-meta" id="shared-detail-meta"></p>
+
+              <div class="shared-detail-actions">
+                <button class="secondary-button" type="button" id="shared-detail-complete">完了にする</button>
+                <button class="primary-button" type="submit">変更を保存</button>
+              </div>
+              <div class="danger-zone">
+                <button class="danger-button wide" type="button" id="shared-detail-delete">この共有家事を削除</button>
+              </div>
+            </form>
+          </dialog>
         </div>
       </section>
 
@@ -452,10 +521,10 @@
     </form>
   </dialog>
 
-  <script src="supabase-config.js?v=15"></script>
-  <script src="db-v12.js?v=15"></script>
-  <script src="shared.js?v=15"></script>
-  <script src="app-v12.js?v=15"></script>
-  <script src="shared-bridge.js?v=15"></script>
+  <script src="supabase-config.js?v=16"></script>
+  <script src="db-v12.js?v=16"></script>
+  <script src="shared.js?v=16"></script>
+  <script src="app-v12.js?v=16"></script>
+  <script src="shared-bridge.js?v=16"></script>
 </body>
 </html>

@@ -22,6 +22,8 @@
     sdkFailed: false,
     syncKind: "idle",
     editingTodo: null,
+    detailTodoId: null,
+    displayMode: "compact",
     personalTodosToShare: [],
     busy: false
   };
@@ -32,6 +34,7 @@
     if (state.initialized) return;
     state.initialized = true;
     cacheElements();
+    restoreDisplayMode();
     bindEvents();
     setDefaultDates();
     prefillInviteFromUrl();
@@ -103,8 +106,13 @@
       "shared-invite-link-output", "shared-copy-invite", "shared-active-invites", "shared-todo-form",
       "shared-form-title", "shared-title-input", "shared-date-input", "shared-time-input",
       "shared-assignee-input", "shared-status-input", "shared-priority-input", "shared-submit",
-      "shared-edit-cancel", "shared-filter-assignee", "shared-filter-self", "shared-filter-completed",
+      "shared-edit-cancel", "shared-display-mode", "shared-filter-panel", "shared-filter-assignee",
+      "shared-filter-self", "shared-filter-priority", "shared-filter-completed",
       "shared-todo-list", "shared-export", "shared-leave", "shared-delete-household",
+      "shared-todo-detail-dialog", "shared-todo-detail-form", "shared-detail-close",
+      "shared-detail-title", "shared-detail-date", "shared-detail-time", "shared-detail-assignee",
+      "shared-detail-status", "shared-detail-priority", "shared-detail-meta",
+      "shared-detail-complete", "shared-detail-delete",
       "personal-share-dialog", "personal-share-summary", "personal-share-assignee",
       "personal-share-confirm", "personal-share-cancel"
     ].forEach((id) => {
@@ -129,15 +137,42 @@
     elements.sharedTodoForm.addEventListener("submit", saveSharedTodo);
     elements.sharedEditCancel.addEventListener("click", cancelSharedEdit);
     elements.sharedTodoList.addEventListener("click", handleTodoAction);
-    elements.sharedTodoList.addEventListener("change", handleTodoQuickChange);
+    elements.sharedTodoList.addEventListener("keydown", handleTodoKeydown);
+    elements.sharedDisplayMode.addEventListener("change", changeDisplayMode);
     elements.sharedFilterAssignee.addEventListener("change", renderTodoList);
     elements.sharedFilterSelf.addEventListener("change", renderTodoList);
+    elements.sharedFilterPriority.addEventListener("change", renderTodoList);
     elements.sharedFilterCompleted.addEventListener("change", renderTodoList);
+    elements.sharedTodoDetailForm.addEventListener("submit", saveTodoDetail);
+    elements.sharedDetailClose.addEventListener("click", closeTodoDetail);
+    elements.sharedDetailComplete.addEventListener("click", toggleTodoDetailComplete);
+    elements.sharedDetailDelete.addEventListener("click", deleteTodoFromDetail);
+    elements.sharedTodoDetailDialog.addEventListener("cancel", closeTodoDetail);
     elements.sharedExport.addEventListener("click", exportSharedTodos);
     elements.sharedLeave.addEventListener("click", leaveHousehold);
     elements.sharedDeleteHousehold.addEventListener("click", deleteHousehold);
     elements.personalShareConfirm.addEventListener("click", confirmPersonalShare);
     elements.personalShareCancel.addEventListener("click", closePersonalShareDialog);
+  }
+
+  function restoreDisplayMode() {
+    try {
+      const saved = localStorage.getItem("tmt-shared-display-mode");
+      state.displayMode = saved === "detail" ? "detail" : "compact";
+    } catch (_error) {
+      state.displayMode = "compact";
+    }
+    elements.sharedDisplayMode.value = state.displayMode;
+  }
+
+  function changeDisplayMode() {
+    state.displayMode = elements.sharedDisplayMode.value === "detail" ? "detail" : "compact";
+    try {
+      localStorage.setItem("tmt-shared-display-mode", state.displayMode);
+    } catch (_error) {
+      // 保存できない環境でも、現在の画面では表示切り替えを利用できる。
+    }
+    renderTodoList();
   }
 
   function isValidConfig(config) {
@@ -162,6 +197,7 @@
       state.todos = [];
       state.invites = [];
       state.editingTodo = null;
+      if (elements.sharedTodoDetailDialog && elements.sharedTodoDetailDialog.open) closeTodoDetail();
       renderState();
       setSyncState("idle", "未ログイン");
       return;
@@ -467,80 +503,100 @@
 
     const assigneeFilter = elements.sharedFilterAssignee.value || "all";
     const selfOnly = elements.sharedFilterSelf.checked;
+    const priorityOnly = elements.sharedFilterPriority.checked;
     const includeDone = elements.sharedFilterCompleted.checked;
     const filtered = state.todos.filter((todo) => {
       if (!includeDone && todo.status === "done") return false;
       if (selfOnly && todo.assignee_user_id !== currentUserId()) return false;
+      if (priorityOnly && !todo.is_priority) return false;
       if (!selfOnly && assigneeFilter === "unassigned" && todo.assignee_user_id !== null) return false;
       if (!selfOnly && assigneeFilter !== "all" && assigneeFilter !== "unassigned" && todo.assignee_user_id !== assigneeFilter) return false;
       return true;
-    });
+    }).sort(compareSharedTodos);
+
+    elements.sharedTodoList.dataset.displayMode = state.displayMode;
 
     if (!filtered.length) {
       const empty = document.createElement("div");
       empty.className = "empty-state";
       empty.textContent = state.todos.length ? "条件に一致する共有家事はありません。" : "共有家事はまだありません。";
       elements.sharedTodoList.append(empty);
+      syncOpenTodoDetail();
       return;
     }
 
     filtered.forEach((todo) => elements.sharedTodoList.append(createTodoCard(todo)));
+    syncOpenTodoDetail();
+  }
+
+  function compareSharedTodos(a, b) {
+    const completionOrder = Number(a.status === "done") - Number(b.status === "done");
+    if (completionOrder !== 0) return completionOrder;
+
+    const priorityOrder = Number(Boolean(b.is_priority)) - Number(Boolean(a.is_priority));
+    if (priorityOrder !== 0) return priorityOrder;
+
+    const dateOrder = String(a.due_date || "9999-12-31").localeCompare(String(b.due_date || "9999-12-31"));
+    if (dateOrder !== 0) return dateOrder;
+
+    const timeOrder = String(a.due_time || "99:99").localeCompare(String(b.due_time || "99:99"));
+    if (timeOrder !== 0) return timeOrder;
+
+    return String(b.created_at || "").localeCompare(String(a.created_at || ""));
   }
 
   function createTodoCard(todo) {
     const card = document.createElement("article");
-    card.className = `shared-todo-card ${todo.status === "done" ? "is-done" : ""} ${todo.is_priority ? "is-priority" : ""}`;
+    card.className = `shared-todo-card display-${state.displayMode} ${todo.status === "done" ? "is-done" : ""} ${todo.is_priority ? "is-priority" : ""}`;
     card.dataset.sharedTodoId = todo.id;
+
+    const content = document.createElement("div");
+    content.className = "shared-todo-content shared-todo-open";
+    content.tabIndex = 0;
+    content.setAttribute("role", "button");
+    content.setAttribute("aria-label", `${todo.title}の詳細を開く`);
+    content.dataset.sharedAction = "open";
 
     const heading = document.createElement("div");
     heading.className = "shared-todo-heading";
     const title = document.createElement("h3");
-    title.textContent = `${todo.is_priority ? "★ " : ""}${todo.title}`;
-    const badge = document.createElement("span");
+    title.textContent = todo.title;
+
+    const badges = document.createElement("div");
+    badges.className = "shared-todo-badges";
     const assignment = getAssigneePresentation(todo.assignee_user_id);
-    badge.className = `assignee-badge ${assignment.className}`;
-    badge.textContent = assignment.label;
-    heading.append(title, badge);
+    const assigneeBadge = document.createElement("span");
+    assigneeBadge.className = `assignee-badge ${assignment.className}`;
+    assigneeBadge.textContent = assignment.label;
+    const statusBadge = document.createElement("span");
+    statusBadge.className = `status-badge status-${todo.status}`;
+    statusBadge.textContent = STATUS_LABELS[todo.status] || STATUS_LABELS.todo;
+    badges.append(assigneeBadge, statusBadge);
+    heading.append(title, badges);
 
     const date = document.createElement("p");
     date.className = "shared-todo-date";
-    date.textContent = `${formatDate(todo.due_date)}${todo.due_time ? ` ${String(todo.due_time).slice(0, 5)}` : ""}`;
-
-    const controls = document.createElement("div");
-    controls.className = "shared-todo-controls";
-    const status = document.createElement("select");
-    status.className = "input shared-quick-select";
-    status.dataset.quickField = "status";
-    Object.entries(STATUS_LABELS).forEach(([value, label]) => appendOption(status, value, label));
-    status.value = todo.status;
-    status.setAttribute("aria-label", `${todo.title}のステータス`);
-
-    const assignee = document.createElement("select");
-    assignee.className = "input shared-quick-select";
-    assignee.dataset.quickField = "assignee_user_id";
-    populateCardAssigneeSelect(assignee, todo.assignee_user_id);
-    assignee.setAttribute("aria-label", `${todo.title}の担当者`);
-    controls.append(status, assignee);
+    const priorityText = todo.is_priority ? "　★ 優先" : "";
+    date.textContent = `${formatDate(todo.due_date)}${todo.due_time ? ` ${String(todo.due_time).slice(0, 5)}` : ""}${priorityText}`;
 
     const meta = document.createElement("p");
     meta.className = "shared-todo-meta";
     meta.textContent = `作成: ${memberName(todo.created_by)} / ${formatDateTime(todo.created_at)}　更新: ${formatDateTime(todo.updated_at)}`;
 
-    const actions = document.createElement("div");
-    actions.className = "shared-card-actions";
-    const complete = createButton(todo.status === "done" ? "未着手に戻す" : "完了にする", "primary-button compact");
-    complete.dataset.sharedAction = todo.status === "done" ? "reopen" : "complete";
-    const edit = createButton("編集", "secondary-button compact");
-    edit.dataset.sharedAction = "edit";
-    const remove = createButton("削除", "danger-button compact");
-    remove.dataset.sharedAction = "delete";
-    actions.append(complete, edit, remove);
+    content.append(heading, date, meta);
 
-    card.append(heading, date, controls, meta, actions);
+    const complete = createButton(todo.status === "done" ? "戻す" : "完了", todo.status === "done"
+      ? "secondary-button compact shared-complete-button"
+      : "primary-button compact shared-complete-button");
+    complete.dataset.sharedAction = todo.status === "done" ? "reopen" : "complete";
+    complete.setAttribute("aria-label", todo.status === "done" ? `${todo.title}を未着手に戻す` : `${todo.title}を完了にする`);
+
+    card.append(content, complete);
     return card;
   }
 
   function populateCardAssigneeSelect(select, selectedValue) {
+    select.innerHTML = "";
     appendOption(select, "", "未割り当て");
     const ownMember = state.members.find((member) => member.user_id === currentUserId());
     if (ownMember) appendOption(select, ownMember.user_id, `自分（${ownMember.display_name}）`);
@@ -741,28 +797,110 @@
   function handleTodoAction(event) {
     const button = event.target.closest("[data-shared-action]");
     const card = event.target.closest("[data-shared-todo-id]");
-    if (!button || !card) return;
+    if (!card) return;
     const todo = state.todos.find((item) => item.id === card.dataset.sharedTodoId);
     if (!todo) return;
 
+    if (!button) {
+      openTodoDetail(todo);
+      return;
+    }
+
+    event.stopPropagation();
     const action = button.dataset.sharedAction;
-    if (action === "edit") {
-      startSharedEdit(todo);
-    } else if (action === "delete") {
-      deleteSharedTodo(todo);
+    if (action === "open") {
+      openTodoDetail(todo);
     } else if (action === "complete" || action === "reopen") {
       updateSharedTodo(todo.id, { status: action === "complete" ? "done" : "todo" });
     }
   }
 
-  function handleTodoQuickChange(event) {
-    const select = event.target.closest("[data-quick-field]");
+  function handleTodoKeydown(event) {
+    if (event.key !== "Enter" && event.key !== " ") return;
     const card = event.target.closest("[data-shared-todo-id]");
-    if (!select || !card) return;
-    const field = select.dataset.quickField;
-    updateSharedTodo(card.dataset.sharedTodoId, {
-      [field]: field === "assignee_user_id" ? (select.value || null) : select.value
+    if (!card || !event.target.closest(".shared-todo-open")) return;
+    const todo = state.todos.find((item) => item.id === card.dataset.sharedTodoId);
+    if (!todo) return;
+    event.preventDefault();
+    openTodoDetail(todo);
+  }
+
+  function openTodoDetail(todo) {
+    state.detailTodoId = todo.id;
+    elements.sharedDetailTitle.value = todo.title;
+    elements.sharedDetailDate.value = todo.due_date || "";
+    elements.sharedDetailTime.value = todo.due_time ? String(todo.due_time).slice(0, 5) : "";
+    populateCardAssigneeSelect(elements.sharedDetailAssignee, todo.assignee_user_id);
+    elements.sharedDetailStatus.value = todo.status;
+    elements.sharedDetailPriority.checked = Boolean(todo.is_priority);
+    elements.sharedDetailMeta.textContent = `作成者: ${memberName(todo.created_by)}　作成: ${formatDateTime(todo.created_at)}　更新: ${formatDateTime(todo.updated_at)}`;
+    elements.sharedDetailComplete.textContent = todo.status === "done" ? "未着手に戻す" : "完了にする";
+
+    if (typeof elements.sharedTodoDetailDialog.showModal === "function") {
+      if (!elements.sharedTodoDetailDialog.open) elements.sharedTodoDetailDialog.showModal();
+    } else {
+      elements.sharedTodoDetailDialog.setAttribute("open", "");
+    }
+  }
+
+  function closeTodoDetail(event) {
+    if (event && event.type === "cancel") event.preventDefault();
+    state.detailTodoId = null;
+    if (typeof elements.sharedTodoDetailDialog.close === "function" && elements.sharedTodoDetailDialog.open) {
+      elements.sharedTodoDetailDialog.close();
+    } else {
+      elements.sharedTodoDetailDialog.removeAttribute("open");
+    }
+  }
+
+  function syncOpenTodoDetail() {
+    if (!state.detailTodoId || !elements.sharedTodoDetailDialog.open) return;
+    const todo = state.todos.find((item) => item.id === state.detailTodoId);
+    if (!todo) {
+      closeTodoDetail();
+      return;
+    }
+    openTodoDetail(todo);
+  }
+
+  async function saveTodoDetail(event) {
+    event.preventDefault();
+    const todo = state.todos.find((item) => item.id === state.detailTodoId);
+    if (!todo) {
+      emitMessage("共有家事が見つかりません。", true);
+      closeTodoDetail();
+      return;
+    }
+
+    const title = elements.sharedDetailTitle.value.trim();
+    const dueDate = elements.sharedDetailDate.value;
+    if (!title || !dueDate) {
+      emitMessage("内容と予定日を入力してください。", true);
+      return;
+    }
+
+    const saved = await updateSharedTodo(todo.id, {
+      title,
+      due_date: dueDate,
+      due_time: elements.sharedDetailTime.value || null,
+      assignee_user_id: elements.sharedDetailAssignee.value || null,
+      status: elements.sharedDetailStatus.value,
+      is_priority: elements.sharedDetailPriority.checked
     });
+    if (saved) closeTodoDetail();
+  }
+
+  async function toggleTodoDetailComplete() {
+    const todo = state.todos.find((item) => item.id === state.detailTodoId);
+    if (!todo) return;
+    await updateSharedTodo(todo.id, { status: todo.status === "done" ? "todo" : "done" });
+  }
+
+  async function deleteTodoFromDetail() {
+    const todo = state.todos.find((item) => item.id === state.detailTodoId);
+    if (!todo) return;
+    const deleted = await deleteSharedTodo(todo);
+    if (deleted) closeTodoDetail();
   }
 
   async function updateSharedTodo(id, values) {
@@ -770,7 +908,7 @@
       await refreshSharedData({ silent: true });
       return;
     }
-    await saveMutation(async () => {
+    return saveMutation(async () => {
       const { data, error } = await state.client
         .from("shared_todos")
         .update(values)
@@ -784,9 +922,9 @@
   }
 
   async function deleteSharedTodo(todo) {
-    if (!confirm(`共有家事「${todo.title}」を削除しますか？ この操作は家族全員に反映されます。`)) return;
-    if (!canSaveSharedData()) return;
-    await saveMutation(async () => {
+    if (!confirm(`共有家事「${todo.title}」を削除しますか？ この操作は家族全員に反映され、元に戻せません。`)) return false;
+    if (!canSaveSharedData()) return false;
+    return saveMutation(async () => {
       const { data, error } = await state.client
         .from("shared_todos")
         .delete()
@@ -980,18 +1118,20 @@
   }
 
   async function saveMutation(operation) {
-    if (state.busy) return;
+    if (state.busy) return false;
     state.busy = true;
     setFormDisabled(true);
     setSyncState("syncing", "同期中");
     try {
       await operation();
       if (state.syncKind !== "error") setSyncState("connected", "接続済み");
+      return true;
     } catch (error) {
       console.error(error);
       setSyncState("error", "同期失敗");
       renderTodoList();
       emitMessage("共有データを保存できませんでした。通信状態を確認して、もう一度お試しください。", true);
+      return false;
     } finally {
       state.busy = false;
       setFormDisabled(false);

@@ -25,10 +25,20 @@
 | `shared.js` | Supabase Auth、家族グループ、招待、共有家事CRUD、Realtime、エラー処理、JSON出力を実装 |
 | `supabase-config.js` | Project URLと公開用キーのプレースホルダーを追加 |
 | `supabase/schema.sql` | 4テーブル、RLS、権限、RPC、招待、Realtime通知、削除／脱退処理を追加 |
-| `service-worker.js` | キャッシュをv15へ更新し、共有関連ファイルを追加。Supabase／CDN応答はキャッシュ対象外に変更 |
+| `service-worker.js` | キャッシュをv16へ更新し、共有関連ファイルを追加。Supabase／CDN応答はキャッシュ対象外に変更 |
 | `manifest.json` | 説明文を共有家事対応へ更新 |
 | `SUPABASE_SETUP.md` | Supabase・Auth・Realtime・GitHub Pagesの設定手順を追加 |
 | `README.md` | データ境界と構成を更新 |
+
+### 共有家事一覧 v16
+
+- 共有家事を1件約70pxのコンパクトな行表示へ変更
+- タイトル、担当者、状態、予定日時、優先、完了ボタンを一覧へ表示
+- 行を押すと、担当者・状態・優先を含む詳細編集ダイアログを表示
+- 編集・削除ボタンを一覧から外し、削除は詳細内の確認操作へ移動
+- コンパクト表示／詳細表示を切り替え、選択を端末のlocalStorageへ保存
+- 優先だけの絞り込みを追加
+- 未完了、優先、予定日、時刻、作成日時の順で並べ替え
 
 ## Supabase SQL
 
@@ -61,7 +71,7 @@
 - HTML ID 125件の重複: なし
 - JavaScriptから参照するDOM ID 108件: 参照漏れなし
 - PWAキャッシュ対象ファイル: 存在確認済み
-- PWAキャッシュv15と外部オリジン除外: 確認済み
+- PWAキャッシュv16と外部オリジン除外: 確認済み
 - `service_role`／secret keyの実値: 混入なし
 - すべての`SECURITY DEFINER`関数: 固定`search_path`あり
 - 4テーブルのRLS有効化・`anon`権限剥奪: SQL静的確認済み
