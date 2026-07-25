@@ -1533,6 +1533,9 @@
   }
 
   function compareTodosByTime(a, b) {
+    const priorityOrder = Number(b.isPriority === true) - Number(a.isPriority === true);
+    if (priorityOrder !== 0) return priorityOrder;
+
     const timeA = a.time || "";
     const timeB = b.time || "";
 

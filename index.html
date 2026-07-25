@@ -9,7 +9,7 @@
   <title>今日メモTodo</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style-v12.css?v=19">
+  <link rel="stylesheet" href="style-v12.css?v=20">
 </head>
 <body>
   <div class="app-shell">
@@ -373,6 +373,33 @@
             <button class="secondary-button wide" type="button" id="shared-week-copy-button">この週の家事をコピー</button>
           </details>
 
+          <div class="shared-selection-heading">
+            <h3>共有家事一覧</h3>
+            <button class="secondary-button compact" type="button" id="shared-select-mode">選択</button>
+          </div>
+
+          <div class="panel shared-select-panel" id="shared-select-panel" hidden>
+            <div class="shared-select-header">
+              <strong id="shared-selected-count">選択 0件</strong>
+              <div class="shared-select-header-actions">
+                <button class="secondary-button compact" type="button" id="shared-select-all">すべて選択</button>
+                <button class="secondary-button compact" type="button" id="shared-select-cancel">キャンセル</button>
+              </div>
+            </div>
+            <div class="shared-select-grid">
+              <label>
+                <span class="field-label compact-label">担当者</span>
+                <select class="input" id="shared-bulk-assignee"></select>
+              </label>
+              <label>
+                <span class="field-label compact-label">予定日</span>
+                <input class="input" id="shared-bulk-date" type="date">
+              </label>
+            </div>
+            <p class="muted shared-small-text">変更しない項目は、そのままにしてください。</p>
+            <button class="primary-button wide" type="button" id="shared-bulk-apply">選択した家事を一括変更</button>
+          </div>
+
           <div class="shared-list-toolbar">
             <label for="shared-display-mode">
               <span class="field-label compact-label">一覧の表示</span>
@@ -537,10 +564,10 @@
     </form>
   </dialog>
 
-  <script src="supabase-config.js?v=19"></script>
-  <script src="db-v12.js?v=19"></script>
-  <script src="shared.js?v=19"></script>
-  <script src="app-v12.js?v=19"></script>
-  <script src="shared-bridge.js?v=19"></script>
+  <script src="supabase-config.js?v=20"></script>
+  <script src="db-v12.js?v=20"></script>
+  <script src="shared.js?v=20"></script>
+  <script src="app-v12.js?v=20"></script>
+  <script src="shared-bridge.js?v=20"></script>
 </body>
 </html>

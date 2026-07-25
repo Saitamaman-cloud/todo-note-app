@@ -1148,6 +1148,46 @@ button:disabled {
   margin-bottom: 18px;
 }
 
+.shared-selection-heading,
+.shared-select-header,
+.shared-select-header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.shared-selection-heading,
+.shared-select-header {
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.shared-selection-heading {
+  margin: 4px 0 10px;
+}
+
+.shared-selection-heading h3 {
+  margin: 0;
+}
+
+.shared-select-header-actions {
+  gap: 6px;
+}
+
+.shared-select-panel {
+  margin-bottom: 12px;
+}
+
+.shared-select-panel[hidden] {
+  display: none;
+}
+
+.shared-select-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0 4px;
+}
+
 .shared-week-copy-panel {
   margin-bottom: 14px;
 }
@@ -1201,6 +1241,22 @@ button:disabled {
 
 .shared-todo-card.is-done h3 {
   text-decoration: line-through;
+}
+
+.shared-todo-card.is-selectable {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.shared-todo-card.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.shared-todo-check {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--accent);
 }
 
 .shared-todo-content {
@@ -1345,9 +1401,15 @@ button:disabled {
 
 @media (max-width: 560px) {
   .shared-form-grid,
+  .shared-select-grid,
   .shared-week-copy-grid,
   .shared-list-toolbar {
     grid-template-columns: 1fr;
+  }
+
+  .shared-select-header {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .shared-filters {
