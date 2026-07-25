@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>共有家事一覧プレビュー</title>
+  <link rel="stylesheet" href="style-v12.css?v=16-preview2">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <p class="app-kicker">家族で同期</p>
+      <h1>共有家事</h1>
+    </header>
+    <main class="app-main">
+      <div class="shared-list-toolbar">
+        <label>
+          <span class="field-label compact-label">一覧の表示</span>
+          <select class="input"><option>コンパクト表示</option></select>
+        </label>
+        <details class="shared-filter-panel"><summary>絞り込み</summary></details>
+      </div>
+      <div class="list shared-todo-list" data-display-mode="compact">
+        <article class="shared-todo-card display-compact is-priority" role="button" tabindex="0">
+          <div class="shared-todo-content">
+            <div class="shared-todo-heading"><h3>洗濯</h3><div class="shared-todo-badges"><span class="assignee-badge assignee-self">自分</span><span class="status-badge status-doing">対応中</span></div></div>
+            <p class="shared-todo-date">2026年7月26日 08:00　★ 優先</p>
+          </div>
+          <button class="primary-button compact shared-complete-button">完了</button>
+        </article>
+        <article class="shared-todo-card display-compact" role="button" tabindex="0">
+          <div class="shared-todo-content">
+            <div class="shared-todo-heading"><h3>トイレ掃除</h3><div class="shared-todo-badges"><span class="assignee-badge assignee-other">長男</span><span class="status-badge status-todo">未着手</span></div></div>
+            <p class="shared-todo-date">2026年7月26日 09:00</p>
+          </div>
+          <button class="primary-button compact shared-complete-button">完了</button>
+        </article>
+        <article class="shared-todo-card display-compact" role="button" tabindex="0">
+          <div class="shared-todo-content">
+            <div class="shared-todo-heading"><h3>食料品の買い物</h3><div class="shared-todo-badges"><span class="assignee-badge assignee-unassigned">未割り当て</span><span class="status-badge status-todo">未着手</span></div></div>
+            <p class="shared-todo-date">2026年7月27日</p>
+          </div>
+          <button class="primary-button compact shared-complete-button">完了</button>
+        </article>
+        <article class="shared-todo-card display-compact" role="button" tabindex="0">
+          <div class="shared-todo-content">
+            <div class="shared-todo-heading"><h3>お風呂掃除</h3><div class="shared-todo-badges"><span class="assignee-badge assignee-self">自分</span><span class="status-badge status-todo">未着手</span></div></div>
+            <p class="shared-todo-date">2026年7月28日 19:00</p>
+          </div>
+          <button class="primary-button compact shared-complete-button">完了</button>
+        </article>
+      </div>
+      <dialog class="shared-todo-detail-dialog" id="preview-detail">
+        <form class="dialog-card shared-detail-form">
+          <div class="shared-detail-header">
+            <div><p class="muted shared-small-text">共有家事の詳細</p><h2>内容の確認・編集</h2></div>
+            <button class="text-button" type="button" id="preview-close">閉じる</button>
+          </div>
+          <label class="field-label">内容</label><input class="input" value="トイレ掃除">
+          <div class="shared-form-grid">
+            <div><label class="field-label">予定日</label><input class="input" type="date" value="2026-07-26"></div>
+            <div><label class="field-label">時刻</label><input class="input" type="time" value="09:00"></div>
+            <div><label class="field-label">担当者</label><select class="input"><option>長男</option></select></div>
+            <div><label class="field-label">ステータス</label><select class="input"><option>未着手</option></select></div>
+          </div>
+          <label class="checkbox-control shared-priority-control"><input type="checkbox"><span>優先表示する</span></label>
+          <p class="shared-todo-meta" style="display:block">作成者: 自分　更新: 2026年7月25日</p>
+          <div class="shared-detail-actions"><button class="secondary-button" type="button">完了にする</button><button class="primary-button" type="button">変更を保存</button></div>
+          <div class="danger-zone"><button class="danger-button wide" type="button">この共有家事を削除</button></div>
+        </form>
+      </dialog>
+    </main>
+  </div>
+  <script>
+    document.querySelectorAll(".shared-todo-card").forEach((card) => card.addEventListener("click", () => document.getElementById("preview-detail").showModal()));
+    document.getElementById("preview-close").addEventListener("click", () => document.getElementById("preview-detail").close());
+  </script>
+</body>
+</html>

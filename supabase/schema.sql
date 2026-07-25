@@ -288,14 +288,19 @@ begin
     raise exception '招待を発行できるのはグループ作成者だけです';
   end if;
 
-  update public.household_invites
+  update public.household_invites as hi
   set revoked_at = now()
-  where household_id = p_household_id
-    and used_at is null
-    and revoked_at is null
-    and expires_at > now();
+  where hi.household_id = p_household_id
+    and hi.used_at is null
+    and hi.revoked_at is null
+    and hi.expires_at > now();
 
-  v_code := encode(extensions.gen_random_bytes(18), 'hex');
+  -- pgcrypto の配置スキーマに依存せず、推測困難な36桁の16進コードを作る。
+  v_code := left(
+    replace(gen_random_uuid()::text, '-', '') ||
+    replace(gen_random_uuid()::text, '-', ''),
+    36
+  );
   v_expires_at := now() + make_interval(hours => greatest(1, least(coalesce(p_valid_hours, 72), 168)));
 
   return query
@@ -304,7 +309,7 @@ begin
   )
   values (
     p_household_id,
-    extensions.digest(v_code, 'sha256'),
+    sha256(convert_to(v_code, 'UTF8')),
     v_user_id,
     v_expires_at
   )
@@ -342,7 +347,7 @@ begin
   select *
   into v_invite
   from public.household_invites hi
-  where hi.code_hash = extensions.digest(v_code, 'sha256')
+  where hi.code_hash = sha256(convert_to(v_code, 'UTF8'))
   for update;
 
   if v_invite.id is null

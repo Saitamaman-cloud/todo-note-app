@@ -107,6 +107,13 @@
     document.querySelectorAll(".nav-button").forEach((button) => {
       button.classList.toggle("is-active", button.dataset.go === "shared");
     });
+    requestAnimationFrame(() => {
+      document.querySelector('.bottom-nav [data-go="shared"]')?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "nearest"
+      });
+    });
 
     if (window.TMTShared && typeof window.TMTShared.render === "function") {
       window.TMTShared.render();

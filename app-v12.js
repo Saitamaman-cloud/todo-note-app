@@ -727,15 +727,29 @@
 
     const activeNav = viewName === "todo-detail" ? "todo" : viewName === "editor" ? "notes" : viewName === "routine-editor" ? "routines" : viewName;
 
+    let activeNavButton = null;
     document.querySelectorAll(".nav-button").forEach((button) => {
       button.classList.toggle("is-active", button.dataset.go === activeNav);
+      if (button.dataset.go === activeNav) activeNavButton = button;
     });
+    revealNavigationButton(activeNavButton);
 
     if (viewName === "home") renderHome();
     if (viewName === "todo") renderTodo();
     if (viewName === "calendar") renderCalendar();
     if (viewName === "notes") renderNotes();
     if (viewName === "routines") renderRoutines();
+  }
+
+  function revealNavigationButton(button) {
+    if (!button) return;
+    requestAnimationFrame(() => {
+      button.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "nearest"
+      });
+    });
   }
 
   function navigate(viewName) {
