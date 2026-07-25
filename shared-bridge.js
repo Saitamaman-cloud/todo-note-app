@@ -28,6 +28,7 @@
 
     addPersonalShareButtons();
     bindBridgeEvents(sharedNav);
+    ensureSupabaseSdk();
 
     if (window.TMTShared && typeof window.TMTShared.init === "function") {
       window.TMTShared.init();
@@ -36,6 +37,16 @@
     }
 
     applySharedRoute();
+  }
+
+  function ensureSupabaseSdk() {
+    if (window.supabase || document.getElementById("supabase-sdk")) return;
+
+    const script = document.createElement("script");
+    script.id = "supabase-sdk";
+    script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+    script.async = true;
+    document.head.append(script);
   }
 
   function addPersonalShareButtons() {

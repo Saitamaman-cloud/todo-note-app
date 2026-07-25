@@ -86,7 +86,7 @@ python -m http.server 8000
 2. `supabase-config.js`にProject URLと公開用キーだけが入っていることを確認します。
 3. `service_role`、secret key、DBパスワードがコミット対象にないことを検索します。
 4. GitHubのSettings > Pagesで、現在と同じ公開元ブランチ／フォルダーを選びます。
-5. 公開後、ブラウザを再読み込みします。Service Workerキャッシュはv13へ更新され、旧キャッシュはactivate時に削除されます。
+5. 公開後、ブラウザを再読み込みします。Service Workerキャッシュはv15へ更新され、旧キャッシュはactivate時に削除されます。
 6. DevTools > Application > Service Workersで新しいService Workerが有効になったことを確認します。
 
 ## データ境界

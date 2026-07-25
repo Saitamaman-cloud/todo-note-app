@@ -163,6 +163,7 @@
       state.invites = [];
       state.editingTodo = null;
       renderState();
+      setSyncState("idle", "未ログイン");
       return;
     }
 
@@ -276,7 +277,7 @@
       state.todos = results[1].data || [];
       state.invites = results[2] ? results[2].data || [] : [];
       renderHousehold();
-      setSyncState("connected", "接続中");
+      setSyncState("connected", "接続済み");
     } catch (error) {
       console.error(error);
       setSyncState("error", "同期失敗");
@@ -299,7 +300,7 @@
         .on("broadcast", { event: "household_members_changed" }, scheduleAccountRefresh)
         .subscribe((status) => {
           if (status === "SUBSCRIBED") {
-            setSyncState("connected", "接続中");
+            setSyncState("connected", "接続済み");
           } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
             setSyncState("error", "同期失敗");
           } else if (status === "CLOSED" && navigator.onLine) {
@@ -985,7 +986,7 @@
     setSyncState("syncing", "同期中");
     try {
       await operation();
-      if (state.syncKind !== "error") setSyncState("connected", "接続中");
+      if (state.syncKind !== "error") setSyncState("connected", "接続済み");
     } catch (error) {
       console.error(error);
       setSyncState("error", "同期失敗");
