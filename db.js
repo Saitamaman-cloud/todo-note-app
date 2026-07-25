@@ -115,7 +115,7 @@
   }
 
   // ToDoを追加する。
-  async function addTodo(title, date, time = "") {
+  async function addTodo(title, date, time = "", isPriority = false) {
     const now = new Date().toISOString();
     const todo = {
       id: createId("todo"),
@@ -123,6 +123,7 @@
       title,
       status: "todo",
       time,
+      isPriority: Boolean(isPriority),
       createdAt: now,
       updatedAt: now
     };
@@ -223,6 +224,7 @@
             title: String(todo.title),
             status: ["todo", "doing", "done"].includes(todo.status) ? todo.status : "todo",
             time: typeof todo.time === "string" ? todo.time : "",
+            isPriority: Boolean(todo.isPriority),
             createdAt: todo.createdAt || new Date().toISOString(),
             updatedAt: todo.updatedAt || new Date().toISOString()
           });

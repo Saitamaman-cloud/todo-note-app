@@ -9,7 +9,7 @@
   <title>今日メモTodo</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style-v11.css?v=28">
+  <link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
   <div class="app-shell">
@@ -75,6 +75,7 @@
         <div class="todo-select-panel" id="todo-select-panel" hidden>
           <p id="todo-selected-count">選択 0件</p>
           <div class="todo-select-actions">
+            <button class="primary-button" type="button" id="todo-share-selected">共有家事に追加</button>
             <button class="danger-button" type="button" id="todo-delete-selected">選択削除</button>
             <button class="secondary-button" type="button" id="todo-select-cancel">キャンセル</button>
           </div>
@@ -93,6 +94,10 @@
             <label class="field-label compact-label" for="todo-title-input">ToDo</label>
             <input class="input" id="todo-title-input" type="text" autocomplete="off" placeholder="今日やることを入力">
           </div>
+          <label class="checkbox-control todo-add-priority">
+            <input id="todo-priority-input" type="checkbox">
+            <span>優先</span>
+          </label>
           <button class="primary-button" type="submit">追加</button>
         </form>
 
@@ -123,8 +128,13 @@
               <span>現在のステータス</span>
               <span class="status-badge" id="todo-detail-status"></span>
             </div>
+            <div class="todo-detail-status-line">
+              <span>優先表示</span>
+              <span id="todo-detail-priority"></span>
+            </div>
 
             <button class="secondary-button wide todo-edit-open" type="button" id="todo-detail-edit">編集</button>
+            <button class="primary-button wide todo-share-open" type="button" id="todo-detail-share">共有家事に追加</button>
 
             <div class="todo-detail-actions">
               <button class="secondary-button" type="button" id="todo-detail-back">戻す</button>
@@ -146,8 +156,14 @@
             <label class="field-label" for="todo-edit-title-input">内容</label>
             <input class="input" id="todo-edit-title-input" type="text" autocomplete="off" placeholder="ToDoの内容">
 
+            <label class="checkbox-control">
+              <input id="todo-edit-priority-input" type="checkbox">
+              <span>優先表示する</span>
+            </label>
+
             <div class="todo-edit-actions">
-              <button class="secondary-button wide" type="button" id="todo-edit-cancel">編集を終了</button>
+              <button class="primary-button" type="button" id="todo-edit-save">保存</button>
+              <button class="secondary-button" type="button" id="todo-edit-cancel">キャンセル</button>
             </div>
           </div>
         </div>
@@ -209,15 +225,164 @@
         <label class="field-label" for="note-title-input">タイトル</label>
         <input class="input" id="note-title-input" type="text" placeholder="タイトル">
 
-            <label class="field-label" for="note-body-input">本文</label>
-            <div class="note-body-resize">
-              <textarea class="textarea" id="note-body-input" placeholder="自由にメモを書く"></textarea>
-              <button class="note-resize-handle" type="button" id="note-resize-handle" aria-label="メモ欄の高さを変更" title="メモ欄の高さを変更"><span aria-hidden="true">↘</span></button>
-            </div>
+        <label class="field-label" for="note-body-input">本文</label>
+        <textarea class="textarea" id="note-body-input" placeholder="自由にメモを書く"></textarea>
 
         <div class="button-row">
           <button class="primary-button" type="button" id="save-note-button">保存</button>
           <button class="danger-button" type="button" id="delete-note-button">削除</button>
+        </div>
+      </section>
+
+      <section class="view" id="view-shared" aria-labelledby="shared-title">
+        <div class="section-heading">
+          <div>
+            <p class="muted">家族で同期</p>
+            <h2 id="shared-title">共有家事</h2>
+          </div>
+          <span class="sync-status sync-idle" id="shared-sync-status">未接続</span>
+        </div>
+
+        <div class="info-box shared-config-panel" id="shared-config-panel" hidden>
+          <h3 id="shared-config-heading">Supabaseの接続設定が必要です</h3>
+          <p id="shared-config-detail"><code>supabase/schema.sql</code>をSupabaseへ適用し、<code>supabase-config.js</code>にProject URLとanon key（またはpublishable key）を設定してください。</p>
+          <p>service_role／secret keyはブラウザやGitHubへ置かないでください。設定前も個人用ToDo・メモはこれまでどおり端末内で利用できます。</p>
+        </div>
+
+        <div id="shared-signed-out" hidden>
+          <div class="panel shared-auth-panel">
+            <h3>ログイン／新規登録</h3>
+            <p class="muted">共有家事だけがSupabaseへ保存されます。個人用ToDo・メモは送信されません。</p>
+            <form id="shared-auth-form">
+              <label class="field-label" for="shared-auth-email">メールアドレス</label>
+              <input class="input" id="shared-auth-email" type="email" autocomplete="email" required>
+              <label class="field-label" for="shared-auth-password">パスワード</label>
+              <input class="input" id="shared-auth-password" type="password" autocomplete="current-password" minlength="6" required>
+              <div class="shared-auth-actions">
+                <button class="primary-button" type="button" id="shared-sign-in">ログイン</button>
+                <button class="secondary-button" type="button" id="shared-sign-up">新規登録</button>
+              </div>
+            </form>
+            <p class="muted shared-small-text">招待リンクを受け取った場合も、先に自分のアカウントでログインしてください。</p>
+          </div>
+        </div>
+
+        <div id="shared-no-household" hidden>
+          <div class="shared-account-bar">
+            <span id="shared-account-email"></span>
+            <button class="text-button" type="button" id="shared-sign-out-setup">ログアウト</button>
+          </div>
+
+          <div class="shared-setup-grid">
+            <form class="panel" id="shared-create-form">
+              <h3>家族グループを作成</h3>
+              <label class="field-label" for="shared-household-name">グループ名</label>
+              <input class="input" id="shared-household-name" type="text" maxlength="60" placeholder="例：わが家" required>
+              <label class="field-label" for="shared-owner-name">自分の表示名</label>
+              <input class="input" id="shared-owner-name" type="text" maxlength="30" placeholder="例：父" required>
+              <button class="primary-button wide shared-form-button" type="submit">グループを作成</button>
+            </form>
+
+            <form class="panel" id="shared-join-form">
+              <h3>招待で参加</h3>
+              <label class="field-label" for="shared-invite-code">招待コードまたは招待リンク</label>
+              <input class="input" id="shared-invite-code" type="text" autocomplete="off" placeholder="受け取ったコードを入力" required>
+              <label class="field-label" for="shared-member-name">自分の表示名</label>
+              <input class="input" id="shared-member-name" type="text" maxlength="30" placeholder="例：長男" required>
+              <button class="primary-button wide shared-form-button" type="submit">グループに参加</button>
+            </form>
+          </div>
+        </div>
+
+        <div id="shared-household" hidden>
+          <div class="shared-account-bar">
+            <div>
+              <strong id="shared-household-title"></strong>
+              <span class="shared-members-label" id="shared-members-label"></span>
+            </div>
+            <button class="text-button" type="button" id="shared-sign-out">ログアウト</button>
+          </div>
+
+          <div class="panel shared-invite-panel" id="shared-invite-panel" hidden>
+            <div class="panel-title">
+              <div>
+                <h3>家族を招待</h3>
+                <p class="muted shared-small-text">招待は72時間有効・1回限りです。新規発行すると前の未使用招待は無効になります。</p>
+              </div>
+              <button class="secondary-button compact" type="button" id="shared-create-invite">招待を発行</button>
+            </div>
+            <div class="shared-invite-result" id="shared-invite-result" hidden>
+              <label class="field-label" for="shared-invite-code-output">招待コード</label>
+              <input class="input mono-input" id="shared-invite-code-output" type="text" readonly>
+              <label class="field-label" for="shared-invite-link-output">招待リンク</label>
+              <input class="input" id="shared-invite-link-output" type="text" readonly>
+              <button class="primary-button wide shared-form-button" type="button" id="shared-copy-invite">招待リンクをコピー</button>
+            </div>
+            <div id="shared-active-invites"></div>
+          </div>
+
+          <form class="panel shared-todo-form" id="shared-todo-form">
+            <div class="panel-title">
+              <h3 id="shared-form-title">共有家事を追加</h3>
+              <button class="text-button" type="button" id="shared-edit-cancel" hidden>編集をやめる</button>
+            </div>
+            <label class="field-label" for="shared-title-input">内容</label>
+            <input class="input" id="shared-title-input" type="text" maxlength="200" autocomplete="off" placeholder="例：ゴミ出し" required>
+            <div class="shared-form-grid">
+              <div>
+                <label class="field-label" for="shared-date-input">予定日</label>
+                <input class="input" id="shared-date-input" type="date" required>
+              </div>
+              <div>
+                <label class="field-label" for="shared-time-input">時刻（任意）</label>
+                <input class="input" id="shared-time-input" type="time">
+              </div>
+              <div>
+                <label class="field-label" for="shared-assignee-input">担当者</label>
+                <select class="input" id="shared-assignee-input"></select>
+              </div>
+              <div>
+                <label class="field-label" for="shared-status-input">ステータス</label>
+                <select class="input" id="shared-status-input">
+                  <option value="todo">未着手</option>
+                  <option value="doing">対応中</option>
+                  <option value="done">完了</option>
+                </select>
+              </div>
+            </div>
+            <label class="checkbox-control shared-priority-control">
+              <input id="shared-priority-input" type="checkbox">
+              <span>優先表示する</span>
+            </label>
+            <button class="primary-button wide" type="submit" id="shared-submit">共有家事を追加</button>
+          </form>
+
+          <div class="shared-filters" aria-label="共有家事の絞り込み">
+            <label>
+              <span class="field-label compact-label">担当者</span>
+              <select class="input" id="shared-filter-assignee">
+                <option value="all">すべての担当者</option>
+              </select>
+            </label>
+            <label class="checkbox-control">
+              <input id="shared-filter-self" type="checkbox">
+              <span>自分の担当だけ</span>
+            </label>
+            <label class="checkbox-control">
+              <input id="shared-filter-completed" type="checkbox">
+              <span>完了済みを含める</span>
+            </label>
+          </div>
+
+          <div class="list shared-todo-list" id="shared-todo-list"></div>
+
+          <div class="panel shared-data-panel">
+            <h3>共有データの管理</h3>
+            <p class="muted shared-small-text">共有家事のJSON出力は閲覧用です。個人用バックアップの復元でクラウドデータが上書きされることはありません。</p>
+            <button class="secondary-button wide" type="button" id="shared-export">共有家事をJSON出力</button>
+            <button class="danger-button wide" type="button" id="shared-leave">家族グループから脱退</button>
+            <button class="danger-button wide" type="button" id="shared-delete-household">家族グループを削除</button>
+          </div>
         </div>
       </section>
 
@@ -238,7 +403,8 @@
         <div class="info-box">
           <h3>アプリ情報</h3>
           <p>今日メモTodoは、ToDoと複数ページのメモを端末内に保存する軽量PWAです。</p>
-          <p>保存先はこのブラウザのIndexedDBです。ログインやクラウド同期はありません。</p>
+          <p>個人用ToDo・メモの保存先は、このブラウザのIndexedDBです。共有家事だけが、明示的な操作によりSupabaseへ保存されます。</p>
+          <p>個人用バックアップには共有家事を含めず、復元しても共有クラウドデータを上書きしません。</p>
           <p>ブラウザデータやサイトデータを削除すると、保存内容が消える可能性があります。必要に応じてバックアップを出力してください。</p>
         </div>
       </section>
@@ -261,6 +427,10 @@
         <span aria-hidden="true">□</span>
         <span>メモ</span>
       </button>
+      <button class="nav-button" type="button" data-go="shared">
+        <span aria-hidden="true">↔</span>
+        <span>共有</span>
+      </button>
       <button class="nav-button" type="button" data-go="settings">
         <span aria-hidden="true">⚙</span>
         <span>設定</span>
@@ -268,7 +438,24 @@
     </nav>
   </div>
 
-  <script src="db-v11.js?v=28"></script>
-  <script src="app-v11.js?v=29"></script>
+  <dialog class="personal-share-dialog" id="personal-share-dialog">
+    <form method="dialog" class="dialog-card" onsubmit="return false">
+      <h2>共有家事に追加</h2>
+      <p id="personal-share-summary"></p>
+      <label class="field-label" for="personal-share-assignee">担当者</label>
+      <select class="input" id="personal-share-assignee"></select>
+      <p class="muted shared-small-text">内容・予定日・時刻・優先表示を引き継ぎます。個人用ToDoの内部IDや関連情報は送信しません。</p>
+      <div class="dialog-actions">
+        <button class="primary-button" type="button" id="personal-share-confirm">共有家事に追加</button>
+        <button class="secondary-button" type="button" id="personal-share-cancel">キャンセル</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="supabase-config.js?v=11"></script>
+  <script src="db.js?v=11"></script>
+  <script src="shared.js?v=11"></script>
+  <script src="app.js?v=11"></script>
+  <script async id="supabase-sdk" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </body>
 </html>

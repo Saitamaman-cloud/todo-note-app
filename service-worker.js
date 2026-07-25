@@ -1,10 +1,12 @@
-const CACHE_NAME = "today-memo-todo-cache-v29";
+const CACHE_NAME = "today-memo-todo-cache-v11";
 const APP_FILES = [
   "./",
   "./index.html",
-  "./style-v11.css?v=28",
-  "./app-v11.js?v=29",
-  "./db-v11.js?v=28",
+  "./style.css?v=11",
+  "./app.js?v=11",
+  "./db.js?v=11",
+  "./shared.js?v=11",
+  "./supabase-config.js?v=11",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png"
@@ -31,6 +33,13 @@ self.addEventListener("activate", (event) => {
 // オフライン時もアプリ本体を返せるようにする。
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") {
+    return;
+  }
+
+  // Supabaseの認証・共有データ・CDN応答はService Workerへ保存しない。
+  // 個人用PWAシェルと共有クラウドデータのキャッシュ境界を明確に保つ。
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin !== self.location.origin) {
     return;
   }
 
