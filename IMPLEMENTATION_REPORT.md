@@ -18,13 +18,14 @@
 | ファイル | 内容 |
 |---|---|
 | `index.html` | 共有画面、認証、グループ作成／参加、共有フォーム、絞り込み、共有管理、個人ToDoの共有導線、下部ナビを追加 |
-| `style.css` | モバイル共有UI、同期状態、担当者バッジ、フィルター、ダイアログを追加 |
-| `app.js` | `#shared`ルート、共有モジュール連携、個人ToDoの明示共有、個人優先表示を追加 |
-| `db.js` | 個人ToDoの`isPriority`保存／復元を追加。Supabase参照は追加していない |
+| `style-v12.css` | 既存デザインを維持し、モバイル共有UI、同期状態、担当者バッジ、フィルター、ダイアログを追加 |
+| `app-v12.js` | 既存の個人ToDo・メモ・ルーチン・複数選択・バックアップ機能を維持 |
+| `db-v12.js` | 既存IndexedDB v2とルーチンストアを維持。Supabase参照は追加していない |
+| `shared-bridge.js` | `#shared`ルート、共有モジュール連携、個人ToDoの明示共有を既存画面へ追加 |
 | `shared.js` | Supabase Auth、家族グループ、招待、共有家事CRUD、Realtime、エラー処理、JSON出力を実装 |
 | `supabase-config.js` | Project URLと公開用キーのプレースホルダーを追加 |
 | `supabase/schema.sql` | 4テーブル、RLS、権限、RPC、招待、Realtime通知、削除／脱退処理を追加 |
-| `service-worker.js` | キャッシュをv11へ更新し、共有関連ファイルを追加。Supabase／CDN応答はキャッシュ対象外に変更 |
+| `service-worker.js` | キャッシュをv13へ更新し、共有関連ファイルを追加。Supabase／CDN応答はキャッシュ対象外に変更 |
 | `manifest.json` | 説明文を共有家事対応へ更新 |
 | `SUPABASE_SETUP.md` | Supabase・Auth・Realtime・GitHub Pagesの設定手順を追加 |
 | `README.md` | データ境界と構成を更新 |
@@ -60,12 +61,12 @@
 - HTML ID 125件の重複: なし
 - JavaScriptから参照するDOM ID 108件: 参照漏れなし
 - PWAキャッシュ対象ファイル: 存在確認済み
-- PWAキャッシュv11と外部オリジン除外: 確認済み
+- PWAキャッシュv13と外部オリジン除外: 確認済み
 - `service_role`／secret keyの実値: 混入なし
 - すべての`SECURITY DEFINER`関数: 固定`search_path`あり
 - 4テーブルのRLS有効化・`anon`権限剥奪: SQL静的確認済み
 - `shared.js`からIndexedDB／個人バックアップへの参照: なし
-- `db.js`からSupabase／共有データへの参照: なし
+- `db-v12.js`からSupabase／共有データへの参照: なし
 - 390px幅のモバイル画面: 表示確認済み
 - 個人ToDoの追加・優先表示・詳細・複数選択: 動作確認済み
 - Supabase未設定時の共有案内: 動作確認済み

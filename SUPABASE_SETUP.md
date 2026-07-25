@@ -86,7 +86,7 @@ python -m http.server 8000
 2. `supabase-config.js`にProject URLと公開用キーだけが入っていることを確認します。
 3. `service_role`、secret key、DBパスワードがコミット対象にないことを検索します。
 4. GitHubのSettings > Pagesで、現在と同じ公開元ブランチ／フォルダーを選びます。
-5. 公開後、ブラウザを再読み込みします。Service Workerキャッシュはv11へ更新され、旧キャッシュはactivate時に削除されます。
+5. 公開後、ブラウザを再読み込みします。Service Workerキャッシュはv13へ更新され、旧キャッシュはactivate時に削除されます。
 6. DevTools > Application > Service Workersで新しいService Workerが有効になったことを確認します。
 
 ## データ境界
@@ -97,4 +97,3 @@ python -m http.server 8000
 - 共有家事JSON: 共有画面から読み取り専用のエクスポート
 - 個人用バックアップの復元: Supabaseへ通信せず、共有家事を変更しない
 - 個人ToDoから共有家事への追加: ボタン操作時だけ、内容・予定日・時刻・優先表示を新規共有レコードへコピーする
-

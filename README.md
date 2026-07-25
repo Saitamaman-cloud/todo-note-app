@@ -18,10 +18,11 @@
 ```text
 todo-note-app/
 ├─ index.html
-├─ style.css
-├─ app.js                 # 既存の個人用画面
-├─ db.js                  # IndexedDB（個人データのみ）
+├─ style-v12.css
+├─ app-v12.js             # 既存の個人用画面・ルーチン
+├─ db-v12.js              # IndexedDB v2（個人データのみ）
 ├─ shared.js              # Supabase Auth / 共有家事 / Realtime
+├─ shared-bridge.js       # 既存画面と共有画面を安全に接続
 ├─ supabase-config.js     # Project URL + 公開用キーだけ
 ├─ service-worker.js
 ├─ manifest.json
