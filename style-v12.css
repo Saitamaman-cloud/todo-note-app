@@ -1148,6 +1148,27 @@ button:disabled {
   margin-bottom: 18px;
 }
 
+.shared-week-copy-panel {
+  margin-bottom: 14px;
+}
+
+.shared-week-copy-panel summary {
+  cursor: pointer;
+  color: var(--accent-dark);
+  font-weight: 800;
+}
+
+.shared-week-copy-panel[open] summary {
+  margin-bottom: 10px;
+}
+
+.shared-week-copy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+
 .shared-todo-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -1222,16 +1243,19 @@ button:disabled {
 }
 
 .assignee-self {
-  background: var(--accent-soft);
-  color: var(--accent-dark);
+  border: 1px solid #e0ad18;
+  background: #fff09a;
+  color: #543e00;
 }
 
 .assignee-other {
-  background: #eee7fb;
-  color: #5d3f89;
+  border: 1px solid #55bd68;
+  background: #bdf2c5;
+  color: #154d21;
 }
 
 .assignee-unassigned {
+  border: 1px solid #c8d0d6;
   background: #e9edf0;
   color: #4e5b65;
 }
@@ -1321,6 +1345,7 @@ button:disabled {
 
 @media (max-width: 560px) {
   .shared-form-grid,
+  .shared-week-copy-grid,
   .shared-list-toolbar {
     grid-template-columns: 1fr;
   }

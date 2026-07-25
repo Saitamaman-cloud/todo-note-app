@@ -9,7 +9,7 @@
   <title>今日メモTodo</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style-v12.css?v=17">
+  <link rel="stylesheet" href="style-v12.css?v=19">
 </head>
 <body>
   <div class="app-shell">
@@ -357,6 +357,22 @@
             <button class="primary-button wide" type="submit" id="shared-submit">共有家事を追加</button>
           </form>
 
+          <details class="panel shared-week-copy-panel" id="shared-week-copy-panel">
+            <summary>週の家事をコピー</summary>
+            <p class="muted shared-small-text">コピー元の週に登録されている共有家事を、曜日・時刻・担当者・優先を保ったまま別の週へ追加します。状態は未着手になります。</p>
+            <div class="shared-week-copy-grid">
+              <label>
+                <span class="field-label compact-label">コピー元の週に含まれる日</span>
+                <input class="input" id="shared-week-copy-source" type="date">
+              </label>
+              <label>
+                <span class="field-label compact-label">コピー先の週に含まれる日</span>
+                <input class="input" id="shared-week-copy-target" type="date">
+              </label>
+            </div>
+            <button class="secondary-button wide" type="button" id="shared-week-copy-button">この週の家事をコピー</button>
+          </details>
+
           <div class="shared-list-toolbar">
             <label for="shared-display-mode">
               <span class="field-label compact-label">一覧の表示</span>
@@ -521,10 +537,10 @@
     </form>
   </dialog>
 
-  <script src="supabase-config.js?v=17"></script>
-  <script src="db-v12.js?v=17"></script>
-  <script src="shared.js?v=17"></script>
-  <script src="app-v12.js?v=17"></script>
-  <script src="shared-bridge.js?v=17"></script>
+  <script src="supabase-config.js?v=19"></script>
+  <script src="db-v12.js?v=19"></script>
+  <script src="shared.js?v=19"></script>
+  <script src="app-v12.js?v=19"></script>
+  <script src="shared-bridge.js?v=19"></script>
 </body>
 </html>

@@ -106,7 +106,9 @@
       "shared-invite-link-output", "shared-copy-invite", "shared-active-invites", "shared-todo-form",
       "shared-form-title", "shared-title-input", "shared-date-input", "shared-time-input",
       "shared-assignee-input", "shared-status-input", "shared-priority-input", "shared-submit",
-      "shared-edit-cancel", "shared-display-mode", "shared-filter-panel", "shared-filter-assignee",
+      "shared-edit-cancel", "shared-week-copy-panel", "shared-week-copy-source",
+      "shared-week-copy-target", "shared-week-copy-button", "shared-display-mode",
+      "shared-filter-panel", "shared-filter-assignee",
       "shared-filter-self", "shared-filter-priority", "shared-filter-completed",
       "shared-todo-list", "shared-export", "shared-leave", "shared-delete-household",
       "shared-todo-detail-dialog", "shared-todo-detail-form", "shared-detail-close",
@@ -136,6 +138,7 @@
     elements.sharedActiveInvites.addEventListener("click", handleInviteAction);
     elements.sharedTodoForm.addEventListener("submit", saveSharedTodo);
     elements.sharedEditCancel.addEventListener("click", cancelSharedEdit);
+    elements.sharedWeekCopyButton.addEventListener("click", copySharedWeek);
     elements.sharedTodoList.addEventListener("click", handleTodoAction);
     elements.sharedTodoList.addEventListener("keydown", handleTodoKeydown);
     elements.sharedDisplayMode.addEventListener("change", changeDisplayMode);
@@ -794,6 +797,88 @@
     });
   }
 
+  async function copySharedWeek() {
+    if (!canSaveSharedData()) return;
+
+    const sourceDate = elements.sharedWeekCopySource.value;
+    const targetDate = elements.sharedWeekCopyTarget.value;
+    if (!sourceDate || !targetDate) {
+      emitMessage("コピー元の週とコピー先の週を選択してください。", true);
+      return;
+    }
+
+    const sourceStart = getMondayOfWeek(sourceDate);
+    const targetStart = getMondayOfWeek(targetDate);
+    if (sourceStart === targetStart) {
+      emitMessage("コピー元とは別の週を選択してください。", true);
+      return;
+    }
+
+    const sourceEnd = addDaysToDateString(sourceStart, 6);
+    const sourceTodos = state.todos.filter((todo) => (
+      todo.due_date >= sourceStart && todo.due_date <= sourceEnd
+    ));
+    if (!sourceTodos.length) {
+      emitMessage(`${formatDate(sourceStart)}からの週には、コピーできる共有家事がありません。`, true);
+      return;
+    }
+
+    const existingKeys = new Set(state.todos.map(sharedTodoDuplicateKey));
+    const memberIds = new Set(state.members.map((member) => member.user_id));
+    const rows = [];
+    let skipped = 0;
+
+    sourceTodos.forEach((todo) => {
+      const dayOffset = daysBetweenDateStrings(sourceStart, todo.due_date);
+      const dueDate = addDaysToDateString(targetStart, dayOffset);
+      const values = {
+        household_id: state.household.id,
+        title: todo.title,
+        due_date: dueDate,
+        due_time: todo.due_time || null,
+        status: "todo",
+        assignee_user_id: memberIds.has(todo.assignee_user_id) ? todo.assignee_user_id : null,
+        is_priority: Boolean(todo.is_priority),
+        created_by: currentUserId()
+      };
+      const key = sharedTodoDuplicateKey(values);
+      if (existingKeys.has(key)) {
+        skipped += 1;
+        return;
+      }
+      existingKeys.add(key);
+      rows.push(values);
+    });
+
+    if (!rows.length) {
+      emitMessage("コピー先には同じ内容・予定日時の共有家事がすでにあります。追加は行いませんでした。", true);
+      return;
+    }
+
+    const sourceLabel = `${formatDate(sourceStart)}～${formatDate(sourceEnd)}`;
+    const targetEnd = addDaysToDateString(targetStart, 6);
+    const targetLabel = `${formatDate(targetStart)}～${formatDate(targetEnd)}`;
+    const confirmed = confirm(
+      `${sourceLabel}の共有家事を${targetLabel}へ${rows.length}件コピーします。\n\n`
+      + "曜日・時刻・担当者・優先を引き継ぎ、状態は「未着手」になります。"
+      + (skipped ? `\n同じ内容・予定日時の${skipped}件は重複を避けて追加しません。` : "")
+    );
+    if (!confirmed) return;
+
+    await saveMutation(async () => {
+      const { data, error } = await state.client
+        .from("shared_todos")
+        .insert(rows)
+        .select("id");
+      if (error || !data) throw error || new Error("Shared week was not copied");
+      await refreshSharedData({ silent: true });
+      emitMessage(
+        `${targetLabel}へ共有家事を${data.length}件コピーしました。`
+        + (skipped ? ` 重複する${skipped}件は追加しませんでした。` : "")
+      );
+    });
+  }
+
   function handleTodoAction(event) {
     const button = event.target.closest("[data-shared-action]");
     const card = event.target.closest("[data-shared-todo-id]");
@@ -1189,7 +1274,11 @@
   }
 
   function setDefaultDates() {
-    if (elements.sharedDateInput) elements.sharedDateInput.value = getTodayString();
+    const today = getTodayString();
+    if (elements.sharedDateInput) elements.sharedDateInput.value = today;
+    const thisMonday = getMondayOfWeek(today);
+    if (elements.sharedWeekCopySource) elements.sharedWeekCopySource.value = thisMonday;
+    if (elements.sharedWeekCopyTarget) elements.sharedWeekCopyTarget.value = addDaysToDateString(thisMonday, 7);
   }
 
   function getTodayString() {
@@ -1211,6 +1300,44 @@
     return new Intl.DateTimeFormat("ja-JP", {
       year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit"
     }).format(date);
+  }
+
+  function getMondayOfWeek(value) {
+    const date = parseLocalDate(value);
+    const day = date.getDay();
+    date.setDate(date.getDate() - (day === 0 ? 6 : day - 1));
+    return formatLocalDate(date);
+  }
+
+  function addDaysToDateString(value, amount) {
+    const date = parseLocalDate(value);
+    date.setDate(date.getDate() + Number(amount || 0));
+    return formatLocalDate(date);
+  }
+
+  function daysBetweenDateStrings(start, end) {
+    const startDate = parseLocalDate(start);
+    const endDate = parseLocalDate(end);
+    return Math.round((endDate.getTime() - startDate.getTime()) / 86400000);
+  }
+
+  function parseLocalDate(value) {
+    const [year, month, day] = String(value).slice(0, 10).split("-").map(Number);
+    return new Date(year, month - 1, day, 12, 0, 0, 0);
+  }
+
+  function formatLocalDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function sharedTodoDuplicateKey(todo) {
+    const title = String(todo.title || "").trim().toLocaleLowerCase("ja-JP");
+    const date = String(todo.due_date || "").slice(0, 10);
+    const time = todo.due_time ? String(todo.due_time).slice(0, 5) : "";
+    return `${title}\u0000${date}\u0000${time}`;
   }
 
   function appendOption(select, value, label) {
