@@ -114,7 +114,7 @@
       "shared-filter-self", "shared-filter-priority", "shared-filter-completed",
       "shared-select-mode", "shared-select-panel", "shared-selected-count",
       "shared-select-all", "shared-select-cancel", "shared-bulk-assignee",
-      "shared-bulk-date", "shared-bulk-apply",
+      "shared-bulk-date", "shared-bulk-status", "shared-bulk-apply",
       "shared-todo-list", "shared-export", "shared-leave", "shared-delete-household",
       "shared-todo-detail-dialog", "shared-todo-detail-form", "shared-detail-close",
       "shared-detail-title", "shared-detail-date", "shared-detail-time", "shared-detail-assignee",
@@ -652,6 +652,7 @@
     state.selectedTodoIds.clear();
     elements.sharedBulkAssignee.value = "keep";
     elements.sharedBulkDate.value = "";
+    elements.sharedBulkStatus.value = "keep";
     renderTodoList();
   }
 
@@ -667,6 +668,7 @@
     state.selectedTodoIds.clear();
     elements.sharedBulkAssignee.value = "keep";
     elements.sharedBulkDate.value = "";
+    elements.sharedBulkStatus.value = "keep";
     renderTodoList();
   }
 
@@ -687,8 +689,9 @@
 
     const assigneeValue = elements.sharedBulkAssignee.value;
     const dueDate = elements.sharedBulkDate.value;
-    if (assigneeValue === "keep" && !dueDate) {
-      emitMessage("変更する担当者または予定日を指定してください。", true);
+    const statusValue = elements.sharedBulkStatus.value;
+    if (assigneeValue === "keep" && !dueDate && statusValue === "keep") {
+      emitMessage("変更する担当者、予定日、またはステータスを指定してください。", true);
       return;
     }
 
@@ -697,14 +700,20 @@
       changes.assignee_user_id = assigneeValue === "unassigned" ? null : assigneeValue;
     }
     if (dueDate) changes.due_date = dueDate;
+    if (statusValue !== "keep") changes.status = statusValue;
 
     const changeLabels = [];
     if (assigneeValue !== "keep") {
       changeLabels.push(`担当者を「${assigneeValue === "unassigned" ? "未割り当て" : memberName(assigneeValue)}」`);
     }
     if (dueDate) changeLabels.push(`予定日を「${formatDate(dueDate)}」`);
+    if (statusValue !== "keep") changeLabels.push(`ステータスを「${STATUS_LABELS[statusValue]}」`);
 
     if (!confirm(`選択した${ids.length}件の${changeLabels.join("、")}に変更しますか？`)) return;
+
+    if (statusValue === "done") {
+      elements.sharedFilterCompleted.checked = true;
+    }
 
     await saveMutation(async () => {
       const { data, error } = await state.client
@@ -718,6 +727,7 @@
       state.selectedTodoIds.clear();
       elements.sharedBulkAssignee.value = "keep";
       elements.sharedBulkDate.value = "";
+      elements.sharedBulkStatus.value = "keep";
       await refreshSharedData({ silent: true });
       emitMessage(`選択した共有家事${data.length}件を一括変更しました。`);
     });

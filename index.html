@@ -9,7 +9,7 @@
   <title>今日メモTodo</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style-v12.css?v=21">
+  <link rel="stylesheet" href="style-v12.css?v=22">
 </head>
 <body>
   <div class="app-shell">
@@ -395,6 +395,15 @@
                 <span class="field-label compact-label">予定日</span>
                 <input class="input" id="shared-bulk-date" type="date">
               </label>
+              <label>
+                <span class="field-label compact-label">ステータス</span>
+                <select class="input" id="shared-bulk-status">
+                  <option value="keep">変更しない</option>
+                  <option value="todo">未着手</option>
+                  <option value="doing">対応中</option>
+                  <option value="done">完了</option>
+                </select>
+              </label>
             </div>
             <p class="muted shared-small-text">変更しない項目は、そのままにしてください。</p>
             <button class="primary-button wide" type="button" id="shared-bulk-apply">選択した家事を一括変更</button>
@@ -564,10 +573,10 @@
     </form>
   </dialog>
 
-  <script src="supabase-config.js?v=21"></script>
-  <script src="db-v12.js?v=21"></script>
-  <script src="shared.js?v=21"></script>
-  <script src="app-v12.js?v=21"></script>
-  <script src="shared-bridge.js?v=21"></script>
+  <script src="supabase-config.js?v=22"></script>
+  <script src="db-v12.js?v=22"></script>
+  <script src="shared.js?v=22"></script>
+  <script src="app-v12.js?v=22"></script>
+  <script src="shared-bridge.js?v=22"></script>
 </body>
 </html>
