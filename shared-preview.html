@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>共有家事一覧プレビュー</title>
-  <link rel="stylesheet" href="style-v12.css?v=20-preview">
+  <link rel="stylesheet" href="style-v12.css?v=16-preview2">
 </head>
 <body>
   <div class="app-shell">
@@ -13,25 +13,6 @@
       <h1>共有家事</h1>
     </header>
     <main class="app-main">
-      <div class="shared-selection-heading">
-        <h3>共有家事一覧</h3>
-        <button class="secondary-button compact" type="button">選択</button>
-      </div>
-      <div class="panel shared-select-panel">
-        <div class="shared-select-header">
-          <strong>選択 2件</strong>
-          <div class="shared-select-header-actions">
-            <button class="secondary-button compact" type="button">すべて選択</button>
-            <button class="secondary-button compact" type="button">キャンセル</button>
-          </div>
-        </div>
-        <div class="shared-select-grid">
-          <label><span class="field-label compact-label">担当者</span><select class="input"><option>長男</option></select></label>
-          <label><span class="field-label compact-label">予定日</span><input class="input" type="date" value="2026-08-03"></label>
-        </div>
-        <p class="muted shared-small-text">変更しない項目は、そのままにしてください。</p>
-        <button class="primary-button wide" type="button">選択した家事を一括変更</button>
-      </div>
       <div class="shared-list-toolbar">
         <label>
           <span class="field-label compact-label">一覧の表示</span>
@@ -40,19 +21,19 @@
         <details class="shared-filter-panel"><summary>絞り込み</summary></details>
       </div>
       <div class="list shared-todo-list" data-display-mode="compact">
-        <article class="shared-todo-card display-compact is-priority is-selectable is-selected">
-          <input class="shared-todo-check" type="checkbox" checked aria-label="洗濯を選択">
+        <article class="shared-todo-card display-compact is-priority" role="button" tabindex="0">
           <div class="shared-todo-content">
             <div class="shared-todo-heading"><h3>洗濯</h3><div class="shared-todo-badges"><span class="assignee-badge assignee-self">自分</span><span class="status-badge status-doing">対応中</span></div></div>
             <p class="shared-todo-date">2026年7月26日 08:00　★ 優先</p>
           </div>
+          <button class="primary-button compact shared-complete-button">完了</button>
         </article>
-        <article class="shared-todo-card display-compact is-selectable is-selected">
-          <input class="shared-todo-check" type="checkbox" checked aria-label="トイレ掃除を選択">
+        <article class="shared-todo-card display-compact" role="button" tabindex="0">
           <div class="shared-todo-content">
             <div class="shared-todo-heading"><h3>トイレ掃除</h3><div class="shared-todo-badges"><span class="assignee-badge assignee-other">長男</span><span class="status-badge status-todo">未着手</span></div></div>
             <p class="shared-todo-date">2026年7月26日 09:00</p>
           </div>
+          <button class="primary-button compact shared-complete-button">完了</button>
         </article>
         <article class="shared-todo-card display-compact" role="button" tabindex="0">
           <div class="shared-todo-content">

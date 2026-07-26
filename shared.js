@@ -24,8 +24,6 @@
     editingTodo: null,
     detailTodoId: null,
     displayMode: "compact",
-    isTodoSelectMode: false,
-    selectedTodoIds: new Set(),
     personalTodosToShare: [],
     busy: false
   };
@@ -112,9 +110,6 @@
       "shared-week-copy-target", "shared-week-copy-button", "shared-display-mode",
       "shared-filter-panel", "shared-filter-assignee",
       "shared-filter-self", "shared-filter-priority", "shared-filter-completed",
-      "shared-select-mode", "shared-select-panel", "shared-selected-count",
-      "shared-select-all", "shared-select-cancel", "shared-bulk-assignee",
-      "shared-bulk-date", "shared-bulk-apply",
       "shared-todo-list", "shared-export", "shared-leave", "shared-delete-household",
       "shared-todo-detail-dialog", "shared-todo-detail-form", "shared-detail-close",
       "shared-detail-title", "shared-detail-date", "shared-detail-time", "shared-detail-assignee",
@@ -144,10 +139,6 @@
     elements.sharedTodoForm.addEventListener("submit", saveSharedTodo);
     elements.sharedEditCancel.addEventListener("click", cancelSharedEdit);
     elements.sharedWeekCopyButton.addEventListener("click", copySharedWeek);
-    elements.sharedSelectMode.addEventListener("click", startSharedTodoSelection);
-    elements.sharedSelectAll.addEventListener("click", selectAllSharedTodos);
-    elements.sharedSelectCancel.addEventListener("click", clearSharedTodoSelection);
-    elements.sharedBulkApply.addEventListener("click", applySharedTodoBulkChanges);
     elements.sharedTodoList.addEventListener("click", handleTodoAction);
     elements.sharedTodoList.addEventListener("keydown", handleTodoKeydown);
     elements.sharedDisplayMode.addEventListener("change", changeDisplayMode);
@@ -458,7 +449,6 @@
     populateMemberSelect(elements.sharedAssigneeInput, true);
     populateMemberSelect(elements.sharedFilterAssignee, true, true);
     populateMemberSelect(elements.personalShareAssignee, true);
-    populateBulkAssigneeSelect();
     renderInvites();
     renderTodoList();
   }
@@ -484,22 +474,6 @@
     } else {
       select.value = "";
     }
-  }
-
-  function populateBulkAssigneeSelect() {
-    const previous = elements.sharedBulkAssignee.value;
-    elements.sharedBulkAssignee.innerHTML = "";
-    appendOption(elements.sharedBulkAssignee, "keep", "変更しない");
-    appendOption(elements.sharedBulkAssignee, "unassigned", "未割り当て");
-
-    const ownMember = state.members.find((member) => member.user_id === currentUserId());
-    if (ownMember) appendOption(elements.sharedBulkAssignee, ownMember.user_id, `自分（${ownMember.display_name}）`);
-    state.members
-      .filter((member) => member.user_id !== currentUserId())
-      .forEach((member) => appendOption(elements.sharedBulkAssignee, member.user_id, member.display_name));
-
-    elements.sharedBulkAssignee.value = Array.from(elements.sharedBulkAssignee.options)
-      .some((option) => option.value === previous) ? previous : "keep";
   }
 
   function renderInvites() {
@@ -544,8 +518,6 @@
     }).sort(compareSharedTodos);
 
     elements.sharedTodoList.dataset.displayMode = state.displayMode;
-    syncSelectedSharedTodoIds(filtered);
-    renderSharedTodoBulkControls(filtered);
 
     if (!filtered.length) {
       const empty = document.createElement("div");
@@ -578,18 +550,15 @@
 
   function createTodoCard(todo) {
     const card = document.createElement("article");
-    const selected = state.selectedTodoIds.has(todo.id);
-    card.className = `shared-todo-card display-${state.displayMode} ${todo.status === "done" ? "is-done" : ""} ${todo.is_priority ? "is-priority" : ""} ${state.isTodoSelectMode ? "is-selectable" : ""} ${selected ? "is-selected" : ""}`;
+    card.className = `shared-todo-card display-${state.displayMode} ${todo.status === "done" ? "is-done" : ""} ${todo.is_priority ? "is-priority" : ""}`;
     card.dataset.sharedTodoId = todo.id;
 
     const content = document.createElement("div");
     content.className = "shared-todo-content shared-todo-open";
-    if (!state.isTodoSelectMode) {
-      content.tabIndex = 0;
-      content.setAttribute("role", "button");
-      content.setAttribute("aria-label", `${todo.title}の詳細を開く`);
-      content.dataset.sharedAction = "open";
-    }
+    content.tabIndex = 0;
+    content.setAttribute("role", "button");
+    content.setAttribute("aria-label", `${todo.title}の詳細を開く`);
+    content.dataset.sharedAction = "open";
 
     const heading = document.createElement("div");
     heading.className = "shared-todo-heading";
@@ -625,102 +594,8 @@
     complete.dataset.sharedAction = todo.status === "done" ? "reopen" : "complete";
     complete.setAttribute("aria-label", todo.status === "done" ? `${todo.title}を未着手に戻す` : `${todo.title}を完了にする`);
 
-    if (state.isTodoSelectMode) {
-      const checkbox = document.createElement("input");
-      checkbox.className = "shared-todo-check";
-      checkbox.type = "checkbox";
-      checkbox.checked = selected;
-      checkbox.setAttribute("aria-label", `${todo.title}を選択`);
-      card.append(checkbox, content);
-    } else {
-      card.append(content, complete);
-    }
+    card.append(content, complete);
     return card;
-  }
-
-  function renderSharedTodoBulkControls(visibleTodos) {
-    const selectedCount = state.selectedTodoIds.size;
-    elements.sharedSelectPanel.hidden = !state.isTodoSelectMode;
-    elements.sharedSelectMode.disabled = state.isTodoSelectMode || !visibleTodos.length;
-    elements.sharedSelectedCount.textContent = `選択 ${selectedCount}件`;
-    elements.sharedSelectAll.disabled = !visibleTodos.length || selectedCount === visibleTodos.length;
-    elements.sharedBulkApply.disabled = !selectedCount;
-  }
-
-  function startSharedTodoSelection() {
-    state.isTodoSelectMode = true;
-    state.selectedTodoIds.clear();
-    elements.sharedBulkAssignee.value = "keep";
-    elements.sharedBulkDate.value = "";
-    renderTodoList();
-  }
-
-  function selectAllSharedTodos() {
-    document.querySelectorAll("#shared-todo-list [data-shared-todo-id]").forEach((card) => {
-      state.selectedTodoIds.add(card.dataset.sharedTodoId);
-    });
-    renderTodoList();
-  }
-
-  function clearSharedTodoSelection() {
-    state.isTodoSelectMode = false;
-    state.selectedTodoIds.clear();
-    elements.sharedBulkAssignee.value = "keep";
-    elements.sharedBulkDate.value = "";
-    renderTodoList();
-  }
-
-  function syncSelectedSharedTodoIds(visibleTodos) {
-    const visibleIds = new Set(visibleTodos.map((todo) => todo.id));
-    state.selectedTodoIds.forEach((id) => {
-      if (!visibleIds.has(id)) state.selectedTodoIds.delete(id);
-    });
-  }
-
-  async function applySharedTodoBulkChanges() {
-    if (!canSaveSharedData()) return;
-    const ids = Array.from(state.selectedTodoIds);
-    if (!ids.length) {
-      emitMessage("一括変更する共有家事を選択してください。", true);
-      return;
-    }
-
-    const assigneeValue = elements.sharedBulkAssignee.value;
-    const dueDate = elements.sharedBulkDate.value;
-    if (assigneeValue === "keep" && !dueDate) {
-      emitMessage("変更する担当者または予定日を指定してください。", true);
-      return;
-    }
-
-    const changes = {};
-    if (assigneeValue !== "keep") {
-      changes.assignee_user_id = assigneeValue === "unassigned" ? null : assigneeValue;
-    }
-    if (dueDate) changes.due_date = dueDate;
-
-    const changeLabels = [];
-    if (assigneeValue !== "keep") {
-      changeLabels.push(`担当者を「${assigneeValue === "unassigned" ? "未割り当て" : memberName(assigneeValue)}」`);
-    }
-    if (dueDate) changeLabels.push(`予定日を「${formatDate(dueDate)}」`);
-
-    if (!confirm(`選択した${ids.length}件の${changeLabels.join("、")}に変更しますか？`)) return;
-
-    await saveMutation(async () => {
-      const { data, error } = await state.client
-        .from("shared_todos")
-        .update(changes)
-        .in("id", ids)
-        .select("id");
-      if (error || !data) throw error || new Error("Shared todos were not updated");
-
-      state.isTodoSelectMode = false;
-      state.selectedTodoIds.clear();
-      elements.sharedBulkAssignee.value = "keep";
-      elements.sharedBulkDate.value = "";
-      await refreshSharedData({ silent: true });
-      emitMessage(`選択した共有家事${data.length}件を一括変更しました。`);
-    });
   }
 
   function populateCardAssigneeSelect(select, selectedValue) {
@@ -1011,21 +886,6 @@
     const todo = state.todos.find((item) => item.id === card.dataset.sharedTodoId);
     if (!todo) return;
 
-    if (state.isTodoSelectMode) {
-      const checkbox = card.querySelector(".shared-todo-check");
-      if (event.target === checkbox) {
-        if (checkbox.checked) state.selectedTodoIds.add(todo.id);
-        else state.selectedTodoIds.delete(todo.id);
-      } else if (state.selectedTodoIds.has(todo.id)) {
-        state.selectedTodoIds.delete(todo.id);
-      } else {
-        state.selectedTodoIds.add(todo.id);
-      }
-      event.preventDefault();
-      renderTodoList();
-      return;
-    }
-
     if (!button) {
       openTodoDetail(todo);
       return;
@@ -1041,7 +901,6 @@
   }
 
   function handleTodoKeydown(event) {
-    if (state.isTodoSelectMode) return;
     if (event.key !== "Enter" && event.key !== " ") return;
     const card = event.target.closest("[data-shared-todo-id]");
     if (!card || !event.target.closest(".shared-todo-open")) return;
