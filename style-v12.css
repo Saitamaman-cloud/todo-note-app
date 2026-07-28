@@ -1037,6 +1037,11 @@ button:disabled {
   margin-top: 16px;
 }
 
+.shared-forgot-password {
+  display: block;
+  margin: 12px auto 0;
+}
+
 .shared-small-text {
   margin: 8px 0 0;
   font-size: 0.84rem;
@@ -1346,6 +1351,7 @@ button:disabled {
 }
 
 .personal-share-dialog,
+.password-reset-dialog,
 .shared-todo-detail-dialog {
   width: min(calc(100% - 28px), 520px);
   max-height: calc(100dvh - 32px);
@@ -1357,6 +1363,7 @@ button:disabled {
 }
 
 .personal-share-dialog::backdrop,
+.password-reset-dialog::backdrop,
 .shared-todo-detail-dialog::backdrop {
   background: rgba(31, 41, 51, 0.48);
 }

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>共有家事一覧プレビュー</title>
-  <link rel="stylesheet" href="style-v12.css?v=22-preview">
+  <link rel="stylesheet" href="style-v12.css?v=23-preview">
 </head>
 <body>
   <div class="app-shell">
@@ -91,8 +91,23 @@
       </dialog>
     </main>
   </div>
+  <dialog class="password-reset-dialog" id="password-reset-preview">
+    <form class="dialog-card">
+      <h2>新しいパスワードを設定</h2>
+      <p>再設定メールのリンクが確認されました。新しいパスワードを2回入力してください。</p>
+      <label class="field-label">新しいパスワード</label>
+      <input class="input" type="password" value="password">
+      <label class="field-label">新しいパスワード（確認）</label>
+      <input class="input" type="password" value="password">
+      <p class="muted shared-small-text">8文字以上で、ほかのサービスと異なるパスワードを設定してください。</p>
+      <div class="dialog-actions">
+        <button class="primary-button" type="button">パスワードを変更</button>
+        <button class="secondary-button" type="button">中止してログアウト</button>
+      </div>
+    </form>
+  </dialog>
   <script>
-    document.querySelectorAll(".shared-todo-card").forEach((card) => card.addEventListener("click", () => document.getElementById("preview-detail").showModal()));
+    document.getElementById("password-reset-preview").showModal();
     document.getElementById("preview-close").addEventListener("click", () => document.getElementById("preview-detail").close());
   </script>
 </body>

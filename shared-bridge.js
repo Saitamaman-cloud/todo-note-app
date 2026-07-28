@@ -3,6 +3,7 @@
 
   const sharedViewHtml = document.getElementById("view-shared")?.outerHTML || "";
   const shareDialogHtml = document.getElementById("personal-share-dialog")?.outerHTML || "";
+  const passwordResetDialogHtml = document.getElementById("password-reset-dialog")?.outerHTML || "";
 
   document.addEventListener("DOMContentLoaded", initializeSharedBridge);
 
@@ -11,13 +12,14 @@
     const settingsView = document.getElementById("view-settings");
     const settingsNav = document.querySelector('.bottom-nav [data-go="settings"]');
 
-    if (!appMain || !settingsView || !settingsNav || !sharedViewHtml || !shareDialogHtml) {
+    if (!appMain || !settingsView || !settingsNav || !sharedViewHtml || !shareDialogHtml || !passwordResetDialogHtml) {
       showBridgeMessage("共有画面の準備に失敗しました。ページを再読み込みしてください。", true);
       return;
     }
 
     settingsView.insertAdjacentHTML("beforebegin", sharedViewHtml);
     document.body.insertAdjacentHTML("beforeend", shareDialogHtml);
+    document.body.insertAdjacentHTML("beforeend", passwordResetDialogHtml);
 
     const sharedNav = document.createElement("button");
     sharedNav.className = "nav-button";

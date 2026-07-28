@@ -1,13 +1,13 @@
-const CACHE_NAME = "today-memo-todo-cache-v22";
+const CACHE_NAME = "today-memo-todo-cache-v23";
 const APP_FILES = [
   "./",
   "./index.html",
-  "./style-v12.css?v=22",
-  "./app-v12.js?v=22",
-  "./db-v12.js?v=22",
-  "./shared.js?v=22",
-  "./shared-bridge.js?v=22",
-  "./supabase-config.js?v=22",
+  "./style-v12.css?v=23",
+  "./app-v12.js?v=23",
+  "./db-v12.js?v=23",
+  "./shared.js?v=23",
+  "./shared-bridge.js?v=23",
+  "./supabase-config.js?v=23",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png"

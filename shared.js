@@ -27,6 +27,7 @@
     isTodoSelectMode: false,
     selectedTodoIds: new Set(),
     personalTodosToShare: [],
+    passwordRecoveryActive: false,
     busy: false
   };
 
@@ -83,8 +84,14 @@
       }
     });
 
-    state.client.auth.onAuthStateChange((_event, session) => {
-      window.setTimeout(() => applySession(session), 0);
+    state.client.auth.onAuthStateChange((event, session) => {
+      window.setTimeout(async () => {
+        await applySession(session);
+        if (event === "PASSWORD_RECOVERY") {
+          state.passwordRecoveryActive = true;
+          openPasswordResetDialog();
+        }
+      }, 0);
     });
 
     state.client.auth.getSession().then(({ data, error }) => {
@@ -101,7 +108,7 @@
     [
       "shared-config-panel", "shared-config-heading", "shared-config-detail", "shared-signed-out", "shared-no-household", "shared-household",
       "shared-auth-form", "shared-auth-email", "shared-auth-password", "shared-sign-in",
-      "shared-sign-up", "shared-sign-out-setup", "shared-create-form", "shared-household-name", "shared-owner-name",
+      "shared-sign-up", "shared-forgot-password", "shared-sign-out-setup", "shared-create-form", "shared-household-name", "shared-owner-name",
       "shared-join-form", "shared-invite-code", "shared-member-name", "shared-account-email",
       "shared-sign-out", "shared-household-title", "shared-members-label", "shared-sync-status",
       "shared-invite-panel", "shared-create-invite", "shared-invite-result", "shared-invite-code-output",
@@ -121,7 +128,9 @@
       "shared-detail-status", "shared-detail-priority", "shared-detail-meta",
       "shared-detail-complete", "shared-detail-delete",
       "personal-share-dialog", "personal-share-summary", "personal-share-assignee",
-      "personal-share-confirm", "personal-share-cancel"
+      "personal-share-confirm", "personal-share-cancel",
+      "password-reset-dialog", "password-reset-form", "password-reset-new",
+      "password-reset-confirm", "password-reset-submit", "password-reset-cancel"
     ].forEach((id) => {
       elements[toCamelCase(id)] = document.getElementById(id);
     });
@@ -134,6 +143,7 @@
     });
     elements.sharedSignIn.addEventListener("click", signIn);
     elements.sharedSignUp.addEventListener("click", signUp);
+    elements.sharedForgotPassword.addEventListener("click", requestPasswordReset);
     elements.sharedSignOut.addEventListener("click", signOut);
     elements.sharedSignOutSetup.addEventListener("click", signOut);
     elements.sharedCreateForm.addEventListener("submit", createHousehold);
@@ -165,6 +175,12 @@
     elements.sharedDeleteHousehold.addEventListener("click", deleteHousehold);
     elements.personalShareConfirm.addEventListener("click", confirmPersonalShare);
     elements.personalShareCancel.addEventListener("click", closePersonalShareDialog);
+    elements.passwordResetForm.addEventListener("submit", updateRecoveredPassword);
+    elements.passwordResetCancel.addEventListener("click", cancelPasswordRecovery);
+    elements.passwordResetDialog.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      cancelPasswordRecovery();
+    });
   }
 
   function restoreDisplayMode() {
@@ -203,6 +219,7 @@
 
     if (!nextUserId) {
       await stopRealtime();
+      state.passwordRecoveryActive = false;
       state.membership = null;
       state.household = null;
       state.members = [];
@@ -210,6 +227,7 @@
       state.invites = [];
       state.editingTodo = null;
       if (elements.sharedTodoDetailDialog && elements.sharedTodoDetailDialog.open) closeTodoDetail();
+      if (elements.passwordResetDialog && elements.passwordResetDialog.open) closePasswordResetDialog();
       renderState();
       setSyncState("idle", "未ログイン");
       return;
@@ -779,6 +797,87 @@
       elements.sharedAuthPassword.value = "";
       emitMessage(data.session ? "アカウントを作成しました。" : "確認メールを送信しました。メール内のリンクを開いてください。");
     }, "アカウントを作成できませんでした。入力内容を確認してください。");
+  }
+
+  async function requestPasswordReset() {
+    const email = elements.sharedAuthEmail.value.trim();
+    if (!email || !elements.sharedAuthEmail.checkValidity()) {
+      emitMessage("登録したメールアドレスを入力してください。", true);
+      elements.sharedAuthEmail.focus();
+      return;
+    }
+
+    await runBusy(async () => {
+      const redirectUrl = `${location.origin}${location.pathname}`;
+      const { error } = await state.client.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl
+      });
+      if (error) throw error;
+      emitMessage("再設定メールを送信しました。メール内のリンクを開いて、新しいパスワードを設定してください。");
+    }, "再設定メールを送信できませんでした。しばらく待ってから、もう一度お試しください。");
+  }
+
+  function openPasswordResetDialog() {
+    if (!elements.passwordResetDialog) return;
+    location.hash = "shared";
+    elements.passwordResetForm.reset();
+    if (typeof elements.passwordResetDialog.showModal === "function") {
+      if (!elements.passwordResetDialog.open) elements.passwordResetDialog.showModal();
+    } else {
+      elements.passwordResetDialog.setAttribute("open", "");
+    }
+    window.setTimeout(() => elements.passwordResetNew.focus(), 0);
+  }
+
+  function closePasswordResetDialog() {
+    if (!elements.passwordResetDialog) return;
+    elements.passwordResetForm.reset();
+    if (typeof elements.passwordResetDialog.close === "function" && elements.passwordResetDialog.open) {
+      elements.passwordResetDialog.close();
+    } else {
+      elements.passwordResetDialog.removeAttribute("open");
+    }
+  }
+
+  async function updateRecoveredPassword(event) {
+    event.preventDefault();
+    if (!state.passwordRecoveryActive || !state.session) {
+      emitMessage("再設定リンクの確認情報がありません。新しい再設定メールを送ってください。", true);
+      return;
+    }
+
+    const newPassword = elements.passwordResetNew.value;
+    const confirmation = elements.passwordResetConfirm.value;
+    if (newPassword.length < 8) {
+      emitMessage("新しいパスワードは8文字以上で入力してください。", true);
+      elements.passwordResetNew.focus();
+      return;
+    }
+    if (newPassword !== confirmation) {
+      emitMessage("確認用パスワードが一致しません。", true);
+      elements.passwordResetConfirm.focus();
+      return;
+    }
+
+    await runBusy(async () => {
+      const { error } = await state.client.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      state.passwordRecoveryActive = false;
+      closePasswordResetDialog();
+      elements.sharedAuthPassword.value = "";
+      emitMessage("パスワードを変更しました。現在の端末ではログイン状態が維持されます。");
+    }, "パスワードを変更できませんでした。別のパスワードで、もう一度お試しください。");
+  }
+
+  async function cancelPasswordRecovery() {
+    if (state.busy) return;
+    closePasswordResetDialog();
+    state.passwordRecoveryActive = false;
+    await runBusy(async () => {
+      const { error } = await state.client.auth.signOut();
+      if (error) throw error;
+      emitMessage("パスワードの再設定を中止してログアウトしました。");
+    }, "ログアウトできませんでした。画面を再読み込みしてください。");
   }
 
   async function signOut() {
@@ -1393,7 +1492,7 @@
   }
 
   function setFormDisabled(disabled) {
-    document.querySelectorAll("#view-shared button, #view-shared input, #view-shared select, #personal-share-dialog button, #personal-share-dialog select")
+    document.querySelectorAll("#view-shared button, #view-shared input, #view-shared select, #personal-share-dialog button, #personal-share-dialog select, #password-reset-dialog button, #password-reset-dialog input")
       .forEach((control) => {
         control.disabled = disabled;
       });

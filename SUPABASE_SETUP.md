@@ -22,6 +22,15 @@
 
 本番では広いワイルドカードを使わず、正確なGitHub Pages URLを登録してください。詳細は[Redirect URLs公式ガイド](https://supabase.com/docs/guides/auth/redirect-urls)を参照してください。
 
+### パスワードを忘れた場合
+
+1. 共有画面で、登録したメールアドレスを入力します。
+2. 「パスワードを忘れた方」を押します。
+3. 届いた再設定メールのリンクを開きます。
+4. アプリに表示される画面で、新しいパスワードを2回入力します。
+
+再設定リンクは、上記のSite URL／Redirect URLsへ戻ります。メールが届かない場合は、迷惑メール、AuthenticationのAuth Logs、メール送信回数制限を確認してください。Supabase標準メールは試用向けのため、継続運用ではCustom SMTPも検討してください。詳細は[Password-based Auth公式ガイド](https://supabase.com/docs/guides/auth/passwords#resetting-a-password)を参照してください。
+
 ## 3. テーブル・RLS・RPC・Realtime通知を作成する
 
 1. Supabase Dashboard > SQL Editorを開きます。
