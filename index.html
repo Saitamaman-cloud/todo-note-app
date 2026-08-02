@@ -9,7 +9,7 @@
   <title>今日メモTodo</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style-v12.css?v=23">
+  <link rel="stylesheet" href="style-v12.css?v=24">
 </head>
 <body>
   <div class="app-shell">
@@ -375,8 +375,18 @@
             <button class="secondary-button wide" type="button" id="shared-week-copy-button">この週の家事をコピー</button>
           </details>
 
+          <div class="shared-list-tabs" role="tablist" aria-label="共有家事の表示切り替え">
+            <button class="shared-list-tab is-active" type="button" id="shared-list-active" role="tab" aria-selected="true">
+              未完了 <span class="shared-list-count" id="shared-active-count">0</span>
+            </button>
+            <button class="shared-list-tab" type="button" id="shared-list-completed" role="tab" aria-selected="false">
+              完了済み <span class="shared-list-count" id="shared-completed-count">0</span>
+            </button>
+          </div>
+          <p class="muted shared-list-guide" id="shared-list-guide">現在取り組む共有家事だけを表示しています。</p>
+
           <div class="shared-selection-heading">
-            <h3>共有家事一覧</h3>
+            <h3 id="shared-list-heading">未完了の家事</h3>
             <button class="secondary-button compact" type="button" id="shared-select-mode">選択</button>
           </div>
 
@@ -435,10 +445,6 @@
                 <label class="checkbox-control">
                   <input id="shared-filter-priority" type="checkbox">
                   <span>優先だけ</span>
-                </label>
-                <label class="checkbox-control">
-                  <input id="shared-filter-completed" type="checkbox" checked>
-                  <span>完了済みを表示</span>
                 </label>
               </div>
             </details>
@@ -503,6 +509,25 @@
               </div>
               <div class="danger-zone">
                 <button class="danger-button wide" type="button" id="shared-detail-delete">この共有家事を削除</button>
+              </div>
+            </form>
+          </dialog>
+
+          <dialog class="shared-restore-dialog" id="shared-restore-dialog">
+            <form class="dialog-card shared-restore-form" id="shared-restore-form">
+              <h2>完了した家事を復活</h2>
+              <p id="shared-restore-summary"></p>
+              <p class="muted shared-small-text">担当者・優先状態を引き継ぎ、未着手として未完了一覧へ戻します。</p>
+
+              <label class="field-label" for="shared-restore-date">新しい予定日</label>
+              <input class="input" id="shared-restore-date" type="date" required>
+
+              <label class="field-label" for="shared-restore-time">時刻（任意）</label>
+              <input class="input" id="shared-restore-time" type="time">
+
+              <div class="dialog-actions">
+                <button class="primary-button" type="submit">この予定日で復活</button>
+                <button class="secondary-button" type="button" id="shared-restore-cancel">キャンセル</button>
               </div>
             </form>
           </dialog>
@@ -594,10 +619,10 @@
     </form>
   </dialog>
 
-  <script src="supabase-config.js?v=23"></script>
-  <script src="db-v12.js?v=23"></script>
-  <script src="shared.js?v=23"></script>
-  <script src="app-v12.js?v=23"></script>
-  <script src="shared-bridge.js?v=23"></script>
+  <script src="supabase-config.js?v=24"></script>
+  <script src="db-v12.js?v=24"></script>
+  <script src="shared.js?v=24"></script>
+  <script src="app-v12.js?v=24"></script>
+  <script src="shared-bridge.js?v=24"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>共有家事一覧プレビュー</title>
-  <link rel="stylesheet" href="style-v12.css?v=23-preview">
+  <link rel="stylesheet" href="style-v12.css?v=24-preview">
 </head>
 <body>
   <div class="app-shell">
@@ -13,11 +13,16 @@
       <h1>共有家事</h1>
     </header>
     <main class="app-main">
+      <div class="shared-list-tabs" role="tablist" aria-label="共有家事の表示切り替え">
+        <button class="shared-list-tab" type="button">未完了 <span class="shared-list-count">3</span></button>
+        <button class="shared-list-tab is-active" type="button">完了済み <span class="shared-list-count">2</span></button>
+      </div>
+      <p class="muted shared-list-guide">完了した家事です。「復活」から新しい予定日を設定して、未完了一覧へ戻せます。</p>
       <div class="shared-selection-heading">
-        <h3>共有家事一覧</h3>
+        <h3>完了済みの家事</h3>
         <button class="secondary-button compact" type="button">選択</button>
       </div>
-      <div class="panel shared-select-panel">
+      <div class="panel shared-select-panel" hidden>
         <div class="shared-select-header">
           <strong>選択 2件</strong>
           <div class="shared-select-header-actions">
@@ -91,23 +96,23 @@
       </dialog>
     </main>
   </div>
-  <dialog class="password-reset-dialog" id="password-reset-preview">
-    <form class="dialog-card">
-      <h2>新しいパスワードを設定</h2>
-      <p>再設定メールのリンクが確認されました。新しいパスワードを2回入力してください。</p>
-      <label class="field-label">新しいパスワード</label>
-      <input class="input" type="password" value="password">
-      <label class="field-label">新しいパスワード（確認）</label>
-      <input class="input" type="password" value="password">
-      <p class="muted shared-small-text">8文字以上で、ほかのサービスと異なるパスワードを設定してください。</p>
+  <dialog class="shared-restore-dialog" id="shared-restore-preview">
+    <form class="dialog-card shared-restore-form">
+      <h2>完了した家事を復活</h2>
+      <p>「トイレ掃除」を未完了一覧へ戻します。</p>
+      <p class="muted shared-small-text">担当者・優先状態を引き継ぎ、未着手として未完了一覧へ戻します。</p>
+      <label class="field-label">新しい予定日</label>
+      <input class="input" type="date" value="2026-08-09">
+      <label class="field-label">時刻（任意）</label>
+      <input class="input" type="time" value="09:00">
       <div class="dialog-actions">
-        <button class="primary-button" type="button">パスワードを変更</button>
-        <button class="secondary-button" type="button">中止してログアウト</button>
+        <button class="primary-button" type="button">この予定日で復活</button>
+        <button class="secondary-button" type="button">キャンセル</button>
       </div>
     </form>
   </dialog>
   <script>
-    document.getElementById("password-reset-preview").showModal();
+    document.getElementById("shared-restore-preview").showModal();
     document.getElementById("preview-close").addEventListener("click", () => document.getElementById("preview-detail").close());
   </script>
 </body>
