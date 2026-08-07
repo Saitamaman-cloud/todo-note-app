@@ -44,6 +44,7 @@
     noteResize: null,
     isTodoSelectMode: false,
     selectedTodoIds: new Set(),
+    todoMode: "dated",
     calendarYear: new Date().getFullYear(),
     calendarMonth: new Date().getMonth() + 1,
     editingNoteId: null,
@@ -144,54 +145,71 @@
               </div>
             </div>
 
-            <label class="field-label" for="todo-date">日付</label>
-            <input class="input" id="todo-date" type="date">
-
-            <div class="todo-bulk-toolbar" aria-label="ToDoの一括操作">
-              <button class="secondary-button compact" type="button" id="todo-select-mode">ToDo項目選択</button>
-              <button class="secondary-button compact" type="button" id="todo-start-all">未着手を対応中へ</button>
+            <div class="todo-mode-switch" role="tablist" aria-label="ToDoの表示切り替え">
+              <button class="todo-mode-button is-active" type="button" id="todo-mode-dated" role="tab" aria-selected="true">日付ごと</button>
+              <button class="todo-mode-button" type="button" id="todo-mode-undated" role="tab" aria-selected="false">日程未定</button>
             </div>
 
-            <div class="todo-select-panel" id="todo-select-panel" hidden>
-              <div class="todo-select-heading">
-                <p id="todo-selected-count">選択 0件</p>
+            <div id="todo-dated-controls">
+              <label class="field-label" for="todo-date">日付</label>
+              <input class="input" id="todo-date" type="date">
+
+              <div class="todo-bulk-toolbar" aria-label="ToDoの一括操作">
+                <button class="secondary-button compact" type="button" id="todo-select-mode">ToDo項目選択</button>
+                <button class="secondary-button compact" type="button" id="todo-start-all">未着手を対応中へ</button>
               </div>
-              <button class="secondary-button" type="button" id="todo-select-all">すべて選択</button>
-              <label class="field-label compact-label todo-copy-date-label" for="todo-copy-date-input">コピー先日付</label>
-              <input class="input" id="todo-copy-date-input" type="date">
-              <div class="todo-select-actions">
-                <button class="primary-button" type="button" id="todo-copy-selected">コピーする</button>
-                <button class="secondary-button" type="button" id="todo-move-selected">移動する</button>
+
+              <div class="todo-select-panel" id="todo-select-panel" hidden>
+                <div class="todo-select-heading">
+                  <p id="todo-selected-count">選択 0件</p>
+                </div>
+                <button class="secondary-button" type="button" id="todo-select-all">すべて選択</button>
+                <label class="field-label compact-label todo-copy-date-label" for="todo-copy-date-input">コピー先日付</label>
+                <input class="input" id="todo-copy-date-input" type="date">
+                <div class="todo-select-actions">
+                  <button class="primary-button" type="button" id="todo-copy-selected">コピーする</button>
+                  <button class="secondary-button" type="button" id="todo-move-selected">移動する</button>
+                </div>
+                <button class="secondary-button" type="button" id="todo-select-cancel">キャンセル</button>
+                <div class="todo-select-status-zone">
+                  <button class="secondary-button" type="button" id="todo-revert-selected">戻る</button>
+                  <button class="secondary-button" type="button" id="todo-advance-selected">進める</button>
+                </div>
+                <div class="todo-select-priority-zone">
+                  <button class="priority-button" type="button" id="todo-prioritize-selected">優先にする</button>
+                  <button class="secondary-button" type="button" id="todo-unprioritize-selected">優先を解除</button>
+                </div>
+                <div class="todo-select-danger-zone">
+                  <button class="danger-button" type="button" id="todo-delete-selected">選択したToDoを削除</button>
+                </div>
               </div>
-              <button class="secondary-button" type="button" id="todo-select-cancel">キャンセル</button>
-              <div class="todo-select-status-zone">
-                <button class="secondary-button" type="button" id="todo-revert-selected">戻る</button>
-                <button class="secondary-button" type="button" id="todo-advance-selected">進める</button>
-              </div>
-              <div class="todo-select-priority-zone">
-                <button class="priority-button" type="button" id="todo-prioritize-selected">優先にする</button>
-                <button class="secondary-button" type="button" id="todo-unprioritize-selected">優先を解除</button>
-              </div>
-              <div class="todo-select-danger-zone">
-                <button class="danger-button" type="button" id="todo-delete-selected">選択したToDoを削除</button>
-              </div>
+
+              <form class="add-form todo-add-form" id="todo-form">
+                <div class="todo-add-date">
+                  <label class="field-label compact-label" for="todo-add-date-input">日付</label>
+                  <input class="input" id="todo-add-date-input" type="date">
+                </div>
+                <div class="todo-add-time">
+                  <label class="field-label compact-label" for="todo-time-input">時刻</label>
+                  <input class="input" id="todo-time-input" type="time">
+                </div>
+                <div class="todo-add-title">
+                  <label class="field-label compact-label" for="todo-title-input">ToDo</label>
+                  <input class="input" id="todo-title-input" type="text" autocomplete="off" placeholder="今日やることを入力">
+                </div>
+                <button class="primary-button" type="submit">追加</button>
+              </form>
             </div>
 
-            <form class="add-form todo-add-form" id="todo-form">
-              <div class="todo-add-date">
-                <label class="field-label compact-label" for="todo-add-date-input">日付</label>
-                <input class="input" id="todo-add-date-input" type="date">
-              </div>
-              <div class="todo-add-time">
-                <label class="field-label compact-label" for="todo-time-input">時刻</label>
-                <input class="input" id="todo-time-input" type="time">
-              </div>
-              <div class="todo-add-title">
-                <label class="field-label compact-label" for="todo-title-input">ToDo</label>
-                <input class="input" id="todo-title-input" type="text" autocomplete="off" placeholder="今日やることを入力">
-              </div>
-              <button class="primary-button" type="submit">追加</button>
-            </form>
+            <div id="todo-undated-controls" hidden>
+              <form class="add-form todo-undated-form" id="todo-undated-form">
+                <div>
+                  <label class="field-label compact-label" for="todo-undated-title-input">やること</label>
+                  <input class="input" id="todo-undated-title-input" type="text" autocomplete="off" placeholder="日程未定のやることを入力">
+                </div>
+                <button class="primary-button" type="submit">追加</button>
+              </form>
+            </div>
 
             <div class="list" id="todo-list"></div>
           </section>
@@ -234,7 +252,7 @@
               </div>
 
               <div class="todo-edit-panel" id="todo-edit-panel" hidden>
-                <label class="field-label" for="todo-edit-date-input">日付</label>
+                <label class="field-label" for="todo-edit-date-input">日付（空欄で日程未定）</label>
                 <input class="input" id="todo-edit-date-input" type="date">
 
                 <label class="field-label" for="todo-edit-time-input">時刻</label>
@@ -508,8 +526,15 @@
     elements.countRoutinesDue = document.getElementById("count-routines-due");
     elements.homeRoutines = document.getElementById("home-routines");
     elements.recentNotes = document.getElementById("recent-notes");
+    elements.todoTitle = document.getElementById("todo-title");
+    elements.todoModeDated = document.getElementById("todo-mode-dated");
+    elements.todoModeUndated = document.getElementById("todo-mode-undated");
+    elements.todoDatedControls = document.getElementById("todo-dated-controls");
+    elements.todoUndatedControls = document.getElementById("todo-undated-controls");
     elements.todoDate = document.getElementById("todo-date");
     elements.todoForm = document.getElementById("todo-form");
+    elements.todoUndatedForm = document.getElementById("todo-undated-form");
+    elements.todoUndatedTitleInput = document.getElementById("todo-undated-title-input");
     elements.todoAddDateInput = document.getElementById("todo-add-date-input");
     elements.todoTimeInput = document.getElementById("todo-time-input");
     elements.todoTitleInput = document.getElementById("todo-title-input");
@@ -604,7 +629,10 @@
       setSelectedDate(elements.todoDate.value || getTodayString());
       renderTodo();
     });
+    elements.todoModeDated.addEventListener("click", () => setTodoMode("dated"));
+    elements.todoModeUndated.addEventListener("click", () => setTodoMode("undated"));
     elements.todoForm.addEventListener("submit", handleAddTodo);
+    elements.todoUndatedForm.addEventListener("submit", handleAddUndatedTodo);
     elements.todoSelectMode.addEventListener("click", enterTodoSelectMode);
     elements.todoSelectAll.addEventListener("click", selectAllTodos);
     elements.todoStartAll.addEventListener("click", startAllTodoItems);
@@ -625,7 +653,10 @@
     elements.todoDetailBack.addEventListener("click", () => handleTodoDetailAction("back"));
     elements.todoDetailNext.addEventListener("click", () => handleTodoDetailAction("next"));
     elements.todoDetailDelete.addEventListener("click", () => handleTodoDetailAction("delete"));
-    elements.todoEditDateInput.addEventListener("change", autoSaveTodoEdit);
+    elements.todoEditDateInput.addEventListener("change", () => {
+      syncTodoEditTimeState();
+      autoSaveTodoEdit();
+    });
     elements.todoEditTimeInput.addEventListener("change", autoSaveTodoEdit);
     elements.todoEditTitleInput.addEventListener("input", scheduleTodoEditAutoSave);
     elements.todoEditCancel.addEventListener("click", finishTodoEdit);
@@ -767,6 +798,28 @@
     }
   }
 
+  function setTodoMode(mode) {
+    const nextMode = mode === "undated" ? "undated" : "dated";
+
+    if (state.todoMode !== nextMode) {
+      clearTodoSelection();
+      state.todoMode = nextMode;
+    }
+
+    renderTodo();
+  }
+
+  function syncTodoModeControls() {
+    const isUndated = state.todoMode === "undated";
+    elements.todoTitle.textContent = isUndated ? "日程未定のやること" : "日付ごとのやること";
+    elements.todoModeDated.classList.toggle("is-active", !isUndated);
+    elements.todoModeUndated.classList.toggle("is-active", isUndated);
+    elements.todoModeDated.setAttribute("aria-selected", String(!isUndated));
+    elements.todoModeUndated.setAttribute("aria-selected", String(isUndated));
+    elements.todoDatedControls.hidden = isUndated;
+    elements.todoUndatedControls.hidden = !isUndated;
+  }
+
   async function renderHome() {
     try {
       const today = getTodayString();
@@ -805,16 +858,24 @@
 
   async function renderTodo() {
     try {
-      setSelectedDate(state.selectedDate);
-      const todos = await window.TMTDB.getTodosByDate(state.selectedDate);
-      const orderedTodos = todos.sort(compareTodosByTime);
+      const isUndated = state.todoMode === "undated";
+      syncTodoModeControls();
+      if (!isUndated) setSelectedDate(state.selectedDate);
+      const todos = isUndated
+        ? await window.TMTDB.getUndatedTodos()
+        : await window.TMTDB.getTodosByDate(state.selectedDate);
+      const orderedTodos = isUndated ? todos : todos.sort(compareTodosByTime);
 
       elements.todoList.innerHTML = "";
-      syncSelectedTodoIds(orderedTodos);
-      renderTodoBulkControls(orderedTodos);
+      if (isUndated) {
+        clearTodoSelection();
+      } else {
+        syncSelectedTodoIds(orderedTodos);
+        renderTodoBulkControls(orderedTodos);
+      }
 
       if (!orderedTodos.length) {
-        elements.todoList.append(createEmptyState("この日のToDoはまだありません。"));
+        elements.todoList.append(createEmptyState(isUndated ? "日程未定のやることはまだありません。" : "この日のToDoはまだありません。"));
         return;
       }
 
@@ -903,6 +964,7 @@
       return;
     }
 
+    state.todoMode = "dated";
     setSelectedDate(day.dataset.calendarDate);
     navigate("todo");
   }
@@ -1002,6 +1064,25 @@
     }
   }
 
+  async function handleAddUndatedTodo(event) {
+    event.preventDefault();
+    const title = elements.todoUndatedTitleInput.value.trim();
+
+    if (!title) {
+      showMessage("やることを入力してください。", true);
+      return;
+    }
+
+    try {
+      await window.TMTDB.addTodo(title, "");
+      elements.todoUndatedTitleInput.value = "";
+      showMessage("日程未定のやることに追加しました。");
+      renderTodo();
+    } catch (error) {
+      showMessage("日程未定のやることを追加できませんでした。", true);
+    }
+  }
+
   function handleTodoOpen(event) {
     const row = event.target.closest("[data-todo-id]");
 
@@ -1032,7 +1113,8 @@
       }
 
       state.selectedTodo = todo;
-      setSelectedDate(todo.date);
+      state.todoMode = todo.date ? "dated" : "undated";
+      if (todo.date) setSelectedDate(todo.date);
       renderTodoDetail(todo, state.isEditingTodo);
     } catch (error) {
       showMessage("ToDo詳細の読み込みに失敗しました。", true);
@@ -1045,9 +1127,9 @@
     elements.todoDetailDisplay.hidden = isEditing;
     elements.todoEditPanel.hidden = !isEditing;
 
-    const todoDate = todo.date || state.selectedDate || getTodayString();
+    const todoDate = todo.date || "";
     elements.todoDetailTitle.textContent = todo.title;
-    elements.todoDetailDate.textContent = todoDate;
+    elements.todoDetailDate.textContent = todoDate || "日程未定";
     elements.todoDetailTime.textContent = formatTodoTime(todo.time);
     elements.todoDetailStatus.textContent = STATUS_LABELS[todo.status] || STATUS_LABELS.todo;
     elements.todoDetailStatus.className = `status-badge status-${todo.status}`;
@@ -1058,6 +1140,7 @@
     if (isEditing) {
       elements.todoEditDateInput.value = todoDate;
       elements.todoEditTimeInput.value = todo.time || "";
+      syncTodoEditTimeState();
       elements.todoEditTitleInput.value = todo.title;
       elements.todoEditTitleInput.focus();
     }
@@ -1107,6 +1190,15 @@
     state.todoEditAutoSaveTimer = window.setTimeout(autoSaveTodoEdit, 500);
   }
 
+  function syncTodoEditTimeState() {
+    const hasDate = Boolean(elements.todoEditDateInput.value);
+    elements.todoEditTimeInput.disabled = !hasDate;
+
+    if (!hasDate) {
+      elements.todoEditTimeInput.value = "";
+    }
+  }
+
   async function autoSaveTodoEdit() {
     if (!state.selectedTodo || !state.isEditingTodo) {
       return;
@@ -1114,9 +1206,9 @@
 
     const title = elements.todoEditTitleInput.value.trim();
     const date = elements.todoEditDateInput.value || "";
-    const time = elements.todoEditTimeInput.value || "";
+    const time = date ? elements.todoEditTimeInput.value || "" : "";
 
-    if (!date || !title) {
+    if (!title) {
       return;
     }
 
@@ -1126,7 +1218,8 @@
 
     try {
       state.selectedTodo = await window.TMTDB.updateTodo({ ...state.selectedTodo, date, title, time });
-      setSelectedDate(state.selectedTodo.date);
+      state.todoMode = state.selectedTodo.date ? "dated" : "undated";
+      if (state.selectedTodo.date) setSelectedDate(state.selectedTodo.date);
       renderTodo();
       renderHome();
     } catch (error) {
@@ -1164,7 +1257,7 @@
 
     const time = document.createElement("span");
     time.className = "todo-row-time";
-    time.textContent = formatTodoTime(todo.time);
+    time.textContent = todo.date ? formatTodoTime(todo.time) : "未定";
 
     const title = document.createElement("span");
     title.className = "todo-row-title";

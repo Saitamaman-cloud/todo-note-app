@@ -1,7 +1,7 @@
 {
   "name": "今日メモTodo",
   "short_name": "メモTodo",
-  "description": "個人用ToDoとメモは端末内へ保存し、家族の共有家事だけを安全に同期するPWAです。",
+  "description": "個人用のToDoと複数ページメモを端末内に保存する軽量PWAです。",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

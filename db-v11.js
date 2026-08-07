@@ -124,6 +124,13 @@
     return useStore(TODO_STORE, "readonly", (store) => requestToPromise(store.getAll()));
   }
 
+  async function getUndatedTodos() {
+    const todos = await getAllTodos();
+    return todos
+      .filter((todo) => !todo.date)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  }
+
   async function addTodo(title, date, time = "", options = {}) {
     const now = new Date().toISOString();
     const todo = {
@@ -282,7 +289,7 @@
 
     return {
       app: "今日メモTodo",
-      version: 2,
+      version: 3,
       exportedAt: new Date().toISOString(),
       todos,
       notes,
@@ -316,10 +323,10 @@
       routineHistoryStore.clear();
 
       todos.forEach((todo) => {
-        if (todo && todo.id && todo.date && todo.title) {
+        if (todo && todo.id && todo.title) {
           todoStore.put({
             id: String(todo.id),
-            date: String(todo.date),
+            date: typeof todo.date === "string" ? todo.date : "",
             title: String(todo.title),
             status: ["todo", "doing", "done"].includes(todo.status) ? todo.status : "todo",
             time: typeof todo.time === "string" ? todo.time : "",
@@ -383,6 +390,7 @@
     getTodo,
     getTodosByDate,
     getTodosByDateRange,
+    getUndatedTodos,
     replaceAllData,
     saveNote,
     saveRoutine,

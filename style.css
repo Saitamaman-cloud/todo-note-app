@@ -169,11 +169,6 @@ button:disabled {
   font-size: 1rem;
 }
 
-.panel-title > button {
-  flex: 0 0 auto;
-  white-space: nowrap;
-}
-
 .info-box p {
   margin: 10px 0 0;
   color: var(--muted);
@@ -224,14 +219,13 @@ button:disabled {
 }
 
 .todo-add-form {
-  grid-template-columns: 138px 112px minmax(0, 1fr) auto auto;
+  grid-template-columns: 138px 112px minmax(0, 1fr) auto;
   align-items: end;
 }
 
 .todo-add-date,
 .todo-add-time,
-.todo-add-title,
-.todo-add-priority {
+.todo-add-title {
   min-width: 0;
 }
 
@@ -269,30 +263,8 @@ button:disabled {
 
 .todo-select-actions {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
-}
-
-.checkbox-control {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-height: 46px;
-  color: var(--text);
-  font-size: 0.92rem;
-  font-weight: 700;
-}
-
-.checkbox-control input {
-  width: 21px;
-  height: 21px;
-  margin: 0;
-  accent-color: var(--accent);
-}
-
-.todo-add-priority {
-  align-self: end;
-  white-space: nowrap;
 }
 
 .primary-button,
@@ -426,10 +398,6 @@ button:disabled {
   white-space: nowrap;
 }
 
-.todo-row-title.is-priority {
-  color: var(--warning);
-}
-
 .todo-row .status-badge {
   padding: 5px 9px;
   font-size: 0.78rem;
@@ -479,10 +447,6 @@ button:disabled {
 
 .todo-edit-open {
   margin-top: 16px;
-}
-
-.todo-share-open {
-  margin-top: 10px;
 }
 
 .todo-edit-panel {
@@ -596,10 +560,6 @@ button:disabled {
     grid-column: 1 / -1;
   }
 
-  .todo-add-priority {
-    grid-column: 1 / -1;
-  }
-
   .todo-add-form .primary-button {
     grid-column: 1 / -1;
   }
@@ -671,8 +631,8 @@ button:disabled {
   left: 0;
   z-index: 10;
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 3px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
   padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.96);
@@ -685,311 +645,8 @@ button:disabled {
   border-radius: 8px;
   background: transparent;
   color: var(--muted);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 800;
-}
-
-.sync-status,
-.assignee-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  padding: 5px 10px;
-  font-size: 0.78rem;
-  font-weight: 800;
-  line-height: 1.3;
-  white-space: nowrap;
-}
-
-.sync-status::before {
-  width: 8px;
-  height: 8px;
-  margin-right: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  content: "";
-}
-
-.sync-connected {
-  background: var(--done-bg);
-  color: var(--done);
-}
-
-.sync-syncing {
-  background: var(--warning-bg);
-  color: var(--warning);
-}
-
-.sync-offline,
-.sync-idle {
-  background: #e9edf0;
-  color: #53616c;
-}
-
-.sync-error {
-  background: var(--danger-bg);
-  color: var(--danger);
-}
-
-.shared-config-panel code {
-  overflow-wrap: anywhere;
-  color: var(--accent-dark);
-  font-weight: 700;
-}
-
-.shared-auth-panel,
-.shared-setup-grid,
-.shared-invite-panel,
-.shared-todo-form,
-.shared-filters,
-.shared-data-panel {
-  margin-bottom: 16px;
-}
-
-.shared-auth-panel h3,
-.shared-setup-grid h3,
-.shared-data-panel h3 {
-  margin: 0;
-}
-
-.shared-auth-actions,
-.dialog-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 16px;
-}
-
-.shared-small-text {
-  margin: 8px 0 0;
-  font-size: 0.84rem;
-}
-
-.shared-account-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
-  padding: 10px 14px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--surface);
-}
-
-.shared-account-bar strong,
-.shared-account-bar span {
-  display: block;
-  overflow-wrap: anywhere;
-}
-
-.shared-members-label {
-  margin-top: 2px;
-  color: var(--muted);
-  font-size: 0.8rem;
-}
-
-.shared-setup-grid {
-  display: grid;
-  gap: 14px;
-}
-
-.shared-form-button {
-  margin-top: 14px;
-}
-
-.shared-invite-result {
-  margin: 12px 0;
-  padding: 12px;
-  border-radius: 8px;
-  background: var(--surface-soft);
-}
-
-.mono-input {
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 0.88rem;
-}
-
-.shared-invite-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-.shared-form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 12px;
-}
-
-.shared-priority-control {
-  margin: 8px 0 10px;
-}
-
-.shared-filters {
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr);
-  align-items: end;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--surface-soft);
-}
-
-.shared-filters .checkbox-control {
-  min-height: 50px;
-}
-
-.shared-todo-list {
-  gap: 10px;
-  margin-bottom: 18px;
-}
-
-.shared-todo-card {
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-left: 5px solid transparent;
-  border-radius: 8px;
-  background: var(--surface);
-  box-shadow: var(--shadow);
-}
-
-.shared-todo-card.is-priority {
-  border-left-color: #c47b15;
-}
-
-.shared-todo-card.is-done {
-  opacity: 0.72;
-}
-
-.shared-todo-card.is-done h3 {
-  text-decoration: line-through;
-}
-
-.shared-todo-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.shared-todo-heading h3 {
-  min-width: 0;
-  margin: 0;
-  overflow-wrap: anywhere;
-  font-size: 1rem;
-}
-
-.assignee-self {
-  background: var(--accent-soft);
-  color: var(--accent-dark);
-}
-
-.assignee-other {
-  background: #eee7fb;
-  color: #5d3f89;
-}
-
-.assignee-unassigned {
-  background: #e9edf0;
-  color: #4e5b65;
-}
-
-.shared-todo-date {
-  margin: 7px 0;
-  color: var(--accent-dark);
-  font-size: 0.9rem;
-  font-weight: 800;
-}
-
-.shared-todo-controls {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.shared-quick-select {
-  min-height: 42px;
-  font-size: 0.9rem;
-}
-
-.shared-todo-meta {
-  margin: 8px 0;
-  color: var(--muted);
-  font-size: 0.78rem;
-}
-
-.shared-card-actions {
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr 0.8fr;
-  gap: 8px;
-}
-
-.shared-data-panel {
-  display: grid;
-  gap: 10px;
-}
-
-.personal-share-dialog {
-  width: min(calc(100% - 28px), 520px);
-  max-height: calc(100dvh - 32px);
-  border: 0;
-  border-radius: 10px;
-  padding: 0;
-  color: var(--text);
-  box-shadow: 0 24px 80px rgba(31, 41, 51, 0.28);
-}
-
-.personal-share-dialog::backdrop {
-  background: rgba(31, 41, 51, 0.48);
-}
-
-.dialog-card {
-  padding: 20px;
-}
-
-.dialog-card h2 {
-  margin: 0 0 8px;
-  font-size: 1.2rem;
-}
-
-.dialog-card > p {
-  margin: 8px 0;
-}
-
-@media (max-width: 560px) {
-  .shared-form-grid,
-  .shared-filters,
-  .shared-todo-controls {
-    grid-template-columns: 1fr;
-  }
-
-  .shared-card-actions {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .shared-card-actions .primary-button {
-    grid-column: 1 / -1;
-  }
-
-  .shared-invite-row {
-    align-items: stretch;
-    flex-direction: column;
-  }
-}
-
-@media (min-width: 700px) {
-  .shared-setup-grid {
-    grid-template-columns: 1fr 1fr;
-  }
 }
 
 .nav-button span {

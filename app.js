@@ -33,10 +33,6 @@
     bindEvents();
     setSelectedDate(state.selectedDate);
 
-    if (window.TMTShared) {
-      window.TMTShared.init();
-    }
-
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("service-worker.js").then((registration) => {
         registration.update();
@@ -64,13 +60,11 @@
     elements.todoAddDateInput = document.getElementById("todo-add-date-input");
     elements.todoTimeInput = document.getElementById("todo-time-input");
     elements.todoTitleInput = document.getElementById("todo-title-input");
-    elements.todoPriorityInput = document.getElementById("todo-priority-input");
     elements.todoSelectMode = document.getElementById("todo-select-mode");
     elements.todoStartAll = document.getElementById("todo-start-all");
     elements.todoSelectPanel = document.getElementById("todo-select-panel");
     elements.todoSelectedCount = document.getElementById("todo-selected-count");
     elements.todoDeleteSelected = document.getElementById("todo-delete-selected");
-    elements.todoShareSelected = document.getElementById("todo-share-selected");
     elements.todoSelectCancel = document.getElementById("todo-select-cancel");
     elements.todoList = document.getElementById("todo-list");
     elements.backToTodoList = document.getElementById("back-to-todo-list");
@@ -80,9 +74,7 @@
     elements.todoDetailDate = document.getElementById("todo-detail-date");
     elements.todoDetailTime = document.getElementById("todo-detail-time");
     elements.todoDetailStatus = document.getElementById("todo-detail-status");
-    elements.todoDetailPriority = document.getElementById("todo-detail-priority");
     elements.todoDetailEdit = document.getElementById("todo-detail-edit");
-    elements.todoDetailShare = document.getElementById("todo-detail-share");
     elements.todoDetailBack = document.getElementById("todo-detail-back");
     elements.todoDetailNext = document.getElementById("todo-detail-next");
     elements.todoDetailDelete = document.getElementById("todo-detail-delete");
@@ -90,7 +82,6 @@
     elements.todoEditDateInput = document.getElementById("todo-edit-date-input");
     elements.todoEditTimeInput = document.getElementById("todo-edit-time-input");
     elements.todoEditTitleInput = document.getElementById("todo-edit-title-input");
-    elements.todoEditPriorityInput = document.getElementById("todo-edit-priority-input");
     elements.todoEditSave = document.getElementById("todo-edit-save");
     elements.todoEditCancel = document.getElementById("todo-edit-cancel");
     elements.calendarPrev = document.getElementById("calendar-prev");
@@ -126,7 +117,6 @@
     elements.todoSelectMode.addEventListener("click", enterTodoSelectMode);
     elements.todoStartAll.addEventListener("click", startAllTodoItems);
     elements.todoDeleteSelected.addEventListener("click", deleteSelectedTodos);
-    elements.todoShareSelected.addEventListener("click", shareSelectedTodos);
     elements.todoSelectCancel.addEventListener("click", () => {
       clearTodoSelection();
       renderTodo();
@@ -134,7 +124,6 @@
     elements.todoList.addEventListener("click", handleTodoOpen);
     elements.backToTodoList.addEventListener("click", () => navigate("todo"));
     elements.todoDetailEdit.addEventListener("click", startTodoEdit);
-    elements.todoDetailShare.addEventListener("click", shareCurrentTodo);
     elements.todoDetailBack.addEventListener("click", () => handleTodoDetailAction("back"));
     elements.todoDetailNext.addEventListener("click", () => handleTodoDetailAction("next"));
     elements.todoDetailDelete.addEventListener("click", () => handleTodoDetailAction("delete"));
@@ -153,11 +142,6 @@
     elements.exportButton.addEventListener("click", exportBackup);
     elements.importButton.addEventListener("click", () => elements.importFile.click());
     elements.importFile.addEventListener("change", importBackup);
-    window.addEventListener("tmt:message", (event) => {
-      if (event.detail && event.detail.text) {
-        showMessage(event.detail.text, event.detail.isError);
-      }
-    });
   }
 
   // ハッシュを見て表示する画面を決める。
@@ -187,7 +171,7 @@
       return;
     }
 
-    showView(["home", "todo", "calendar", "notes", "shared", "settings"].includes(route) ? route : "home");
+    showView(["home", "todo", "calendar", "notes", "settings"].includes(route) ? route : "home");
   }
 
   // 指定の画面だけを表示する。
@@ -212,7 +196,6 @@
     if (viewName === "todo") renderTodo();
     if (viewName === "calendar") renderCalendar();
     if (viewName === "notes") renderNotes();
-    if (viewName === "shared" && window.TMTShared) window.TMTShared.render();
   }
 
   // ハッシュを書き換えて画面遷移する。
@@ -413,7 +396,6 @@
     const title = elements.todoTitleInput.value.trim();
     const date = elements.todoAddDateInput.value || state.selectedDate;
     const time = elements.todoTimeInput.value || "";
-    const isPriority = elements.todoPriorityInput.checked;
 
     if (!date) {
       showMessage("日付を入力してください。", true);
@@ -426,12 +408,11 @@
     }
 
     try {
-      await window.TMTDB.addTodo(title, date, time, isPriority);
+      await window.TMTDB.addTodo(title, date, time);
       setSelectedDate(date);
       clearTodoSelection();
       elements.todoTitleInput.value = "";
       elements.todoTimeInput.value = "";
-      elements.todoPriorityInput.checked = false;
       showMessage("ToDoを追加しました。");
       renderTodo();
       renderHome();
@@ -492,7 +473,6 @@
     elements.todoDetailTime.textContent = formatTodoTime(todo.time);
     elements.todoDetailStatus.textContent = STATUS_LABELS[todo.status] || STATUS_LABELS.todo;
     elements.todoDetailStatus.className = `status-badge status-${todo.status}`;
-    elements.todoDetailPriority.textContent = todo.isPriority ? "★ 優先" : "通常";
     elements.todoDetailBack.disabled = todo.status === "todo";
     elements.todoDetailNext.disabled = todo.status === "done";
     elements.todoDetailNext.textContent = todo.status === "done" ? "完了済" : "進める";
@@ -501,7 +481,6 @@
       elements.todoEditDateInput.value = todoDate;
       elements.todoEditTimeInput.value = todo.time || "";
       elements.todoEditTitleInput.value = todo.title;
-      elements.todoEditPriorityInput.checked = Boolean(todo.isPriority);
       elements.todoEditTitleInput.focus();
     }
   }
@@ -556,7 +535,6 @@
     const title = elements.todoEditTitleInput.value.trim();
     const date = elements.todoEditDateInput.value || "";
     const time = elements.todoEditTimeInput.value || "";
-    const isPriority = elements.todoEditPriorityInput.checked;
 
     if (!date) {
       showMessage("日付を入力してください。", true);
@@ -569,7 +547,7 @@
     }
 
     try {
-      state.selectedTodo = await window.TMTDB.updateTodo({ ...state.selectedTodo, date, title, time, isPriority });
+      state.selectedTodo = await window.TMTDB.updateTodo({ ...state.selectedTodo, date, title, time });
       setSelectedDate(state.selectedTodo.date);
       renderTodo();
       renderTodoDetail(state.selectedTodo, false);
@@ -614,8 +592,7 @@
 
     const title = document.createElement("span");
     title.className = "todo-row-title";
-    title.textContent = `${todo.isPriority ? "★ " : ""}${todo.title}`;
-    title.classList.toggle("is-priority", Boolean(todo.isPriority));
+    title.textContent = todo.title;
 
     const badge = document.createElement("span");
     badge.className = `status-badge status-${todo.status}`;
@@ -635,7 +612,6 @@
     elements.todoSelectMode.disabled = !todoCount || state.isTodoSelectMode;
     elements.todoStartAll.disabled = state.isTodoSelectMode || !todoStatusCount;
     elements.todoDeleteSelected.disabled = !selectedCount;
-    elements.todoShareSelected.disabled = !selectedCount;
     elements.todoSelectedCount.textContent = `選択 ${selectedCount}件`;
   }
 
@@ -694,34 +670,6 @@
     } catch (error) {
       showMessage("選択したToDoの削除に失敗しました。", true);
     }
-  }
-
-  // 選択した個人用ToDoを、本人の明示操作で共有家事の新規データとして渡す。
-  async function shareSelectedTodos() {
-    const ids = Array.from(state.selectedTodoIds);
-
-    if (!ids.length) {
-      showMessage("共有するToDoを選択してください。", true);
-      return;
-    }
-
-    try {
-      const todos = (await Promise.all(ids.map((id) => window.TMTDB.getTodo(id)))).filter(Boolean);
-      if (!window.TMTShared) throw new Error("Shared feature is unavailable");
-      window.TMTShared.openPersonalShareDialog(todos);
-    } catch (error) {
-      showMessage("共有家事への追加準備に失敗しました。", true);
-    }
-  }
-
-  // 詳細表示中の個人用ToDoを共有家事へコピーする。
-  function shareCurrentTodo() {
-    if (!state.selectedTodo || !window.TMTShared) {
-      showMessage("共有家事への追加準備に失敗しました。", true);
-      return;
-    }
-
-    window.TMTShared.openPersonalShareDialog([state.selectedTodo]);
   }
 
   // 表示中の日付の未着手ToDoをまとめて対応中にする。

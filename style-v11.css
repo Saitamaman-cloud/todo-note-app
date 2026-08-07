@@ -284,6 +284,42 @@ button:disabled {
   min-width: 0;
 }
 
+.todo-mode-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 16px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.todo-mode-button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.todo-mode-button.is-active {
+  background: var(--surface);
+  color: var(--accent-dark);
+  box-shadow: 0 1px 4px rgba(31, 41, 51, 0.12);
+}
+
+#todo-dated-controls[hidden],
+#todo-undated-controls[hidden] {
+  display: none;
+}
+
+.todo-undated-form {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+
 .compact-label {
   margin-top: 0;
 }
@@ -909,6 +945,7 @@ button:disabled {
   }
 
   .todo-add-form,
+  .todo-undated-form,
   .form-grid {
     grid-template-columns: minmax(0, 1fr);
   }
