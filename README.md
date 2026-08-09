@@ -1,6 +1,6 @@
 # 今日メモTodo
 
-## v32 統合版
+## v32 ルーチンToDo自動同期版
 
 個人用ToDo・カレンダー・メモ・ルーチン・日程未定ToDoを端末内のIndexedDBへ保存し、共有家事だけをSupabaseで同期する静的PWAです。
 
@@ -8,8 +8,10 @@
 - 「共有」から家族グループの共有家事を表示できます。
 - 共有家事は「未完了」と「完了済み」に分けて表示します。
 - 完了済み家事は、新しい予定日を設定して復活できます。
-- ルーチンの時刻・曜日・間隔・次回予定日などを編集すると、今日以降の未完了なルーチン由来ToDoへ自動反映します。
-- 過去のToDo、完了済みToDo、通常の手入力ToDoはルーチン同期で変更しません。
+- ルーチンを編集すると、今日以降の未着手ToDoへタイトル・時刻・繰り返し・予定期間を自動反映します。
+- 過去、対応中、完了済みのToDoは日程変更で削除しません。対応中は日付と状態を保ったままタイトル・時刻だけ更新します。
+- 「ToDoへ追加」で手動作成したルーチン項目は、日付と状態を保ったままタイトル・時刻だけ更新します。
+- 自動追加OFFやルーチン無効化だけでは、すでに作成済みのToDoを削除しません。
 - 個人用ToDo・メモ・ルーチンは自動でSupabaseへ送信しません。
 - PWAキャッシュは `today-memo-todo-cache-v32` です。
 
@@ -150,7 +152,7 @@ IndexedDB は既存データを残したままバージョン 2 に更新され�
 
 ### PWAキャッシュ
 
-Service Worker のキャッシュ名を `today-memo-todo-cache-v15` に更新しました。読み込み対象も `style-v11.css?v=15`、`db-v11.js?v=15`、`app-v11.js?v=15` に更新しています。
+Service Worker のキャッシュ名は `today-memo-todo-cache-v32` です。読み込み対象も `style-v32.css?v=32`、`db-v32.js?v=32`、`app-v32.js?v=32` へ更新しています。
 
 個人用の「ToDo + 複数ページメモ」PWAです。スマホで今日のToDoを追加し、状態を変え、自由メモを複数ページ保存できます。データはログインなしで端末内のIndexedDBに保存します。
 
@@ -159,12 +161,19 @@ Service Worker のキャッシュ名を `today-memo-todo-cache-v15` に更新し
 ```text
 todo-note-app/
 ├─ index.html
-├─ style.css
-├─ app.js
-├─ db.js
+├─ style-v32.css
+├─ app-v32.js
+├─ db-v32.js
+├─ shared.js
+├─ shared-bridge.js
+├─ supabase-config.js
 ├─ manifest.json
 ├─ service-worker.js
 ├─ README.md
+├─ SUPABASE_SETUP.md
+├─ IMPLEMENTATION_REPORT.md
+├─ supabase/
+│  └─ schema.sql
 └─ icons/
    ├─ icon-192.png
    └─ icon-512.png
