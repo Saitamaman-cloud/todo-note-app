@@ -1,10 +1,11 @@
-const CACHE_NAME = "today-memo-todo-cache-v39";
+const CACHE_NAME = "today-memo-todo-cache-v40";
 const APP_FILES = [
   "./",
   "./index.html",
   "./style-v38.css?v=38",
   "./style-v39.css?v=39",
-  "./app-v39.js?v=39",
+  "./style-v40.css?v=40",
+  "./app-v40.js?v=40",
   "./db-v38.js?v=38",
   "./subtasks-v39.js?v=39",
   "./shared.js?v=32",
