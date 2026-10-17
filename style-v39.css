@@ -1,0 +1,68 @@
+@import url("./style-v38.css?v=38");
+
+/* Keep the familiar parent UI; only the subToDo list becomes compact. */
+.subtask-summary { margin-bottom: 2px; }
+.subtask-hint { font-size: .75rem; }
+.subtask-list { gap: 0; margin: 8px 0; }
+.subtask-row {
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 4px;
+  padding: 2px 0;
+  align-items: start;
+}
+.subtask-row.is-template { grid-template-columns: minmax(0, 1fr); }
+.subtask-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.subtask-check input {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+.subtask-title {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  border: 0;
+  border-radius: 4px;
+  padding: 8px 4px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.subtask-title:active { background: var(--surface-soft); }
+.subtask-title:focus-visible,
+.subtask-check:focus-within { outline: 2px solid var(--accent); outline-offset: -2px; }
+.subtask-add-toggle { min-height: 44px; }
+.subtask-add-form { grid-template-columns: minmax(0, 1fr) auto; margin-top: 6px; }
+.subtask-add-form[hidden], .subtask-hint[hidden] { display: none; }
+.subtask-message:empty { display: none; }
+.subtask-message:not(:empty) { margin-top: 6px; }
+.subtask-dialog {
+  width: min(480px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 20px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--text);
+  background: var(--surface);
+  overflow-y: auto;
+  box-shadow: 0 24px 80px rgba(31, 41, 51, .28);
+}
+.subtask-dialog::backdrop { background: rgba(31, 41, 51, .48); }
+.subtask-dialog .subtask-edit-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.subtask-dialog h2 { margin: 0; font-size: 1.15rem; }
+.subtask-dialog .textarea { min-height: 100px; resize: vertical; }
+.subtask-dialog-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.subtask-delete { margin-top: 12px; }
