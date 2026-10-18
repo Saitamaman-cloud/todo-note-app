@@ -1,0 +1,11 @@
+@import url("./style-v40.css?v=40");
+
+#view-routine-editor > .routine-editor-actions { margin-top: 16px; }
+#routine-form-subtasks-heading { margin-bottom: 8px; }
+#routine-weekdays-preset { margin-top: 8px; }
+#routine-weekday-summary { margin-bottom: 0; }
+#routine-weekday-list label { min-height: 44px; }
+#routine-weekday-list label:has(input:checked) { background: var(--accent-soft); color: var(--accent-dark); }
+@media (max-width: 480px) {
+  #routine-weekday-list { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
