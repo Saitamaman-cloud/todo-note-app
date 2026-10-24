@@ -1,4 +1,4 @@
-const CACHE_NAME = "today-memo-todo-cache-v43";
+const CACHE_NAME = "today-memo-todo-cache-v44";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -7,8 +7,8 @@ const APP_FILES = [
   "./style-v40.css?v=40",
   "./style-v41.css?v=41",
   "./style-v42.css?v=42",
-  "./app-v43.js?v=43",
-  "./db-v43.js?v=43",
+  "./app-v44.js?v=44",
+  "./db-v44.js?v=44",
   "./subtasks-v41.js?v=41",
   "./shared.js?v=32",
   "./shared-bridge.js?v=32",
