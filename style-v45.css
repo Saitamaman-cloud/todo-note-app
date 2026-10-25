@@ -1,0 +1,28 @@
+@import url("./style-v42.css?v=42");
+
+.subtask-check { position: relative; }
+.subtask-check input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--muted);
+  border-radius: 4px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.subtask-check input:checked { border-color: var(--accent); background: var(--accent); }
+.subtask-check input:indeterminate { border-color: var(--warning); background: var(--warning-bg); }
+.subtask-check-mark {
+  display: grid;
+  place-items: center;
+  position: absolute;
+  inset: 0;
+  color: var(--surface);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+.subtask-row.is-partial .subtask-check-mark { color: var(--warning); }
+.subtask-row.is-partial .subtask-title { text-decoration: none; }
