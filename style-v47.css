@@ -1,0 +1,12 @@
+@import url("./style-v45.css?v=45");
+
+.routine-end-warning {
+  margin: 8px 0;
+  padding: 10px 12px;
+  border-left: 4px solid var(--warning);
+  border-radius: 4px;
+  color: var(--warning);
+  background: var(--warning-bg);
+  line-height: 1.5;
+}
+.routine-end-warning[hidden] { display: none; }
