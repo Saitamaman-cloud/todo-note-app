@@ -1,0 +1,10 @@
+@import url("./style-v47.css?v=47");
+
+/* Keep completed ToDos legible and distinguish their badge from the other states. */
+#view-todo .todo-row.is-done { opacity: 1; }
+#view-todo .status-done,
+#view-todo-detail .status-done {
+  color: #234610;
+  background: #b6ec58;
+  box-shadow: inset 0 0 0 1px #74b729;
+}
