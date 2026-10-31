@@ -1,0 +1,6 @@
+@import url("./style-v49.css?v=49");
+
+#view-todo .status-done,
+#view-todo-detail .status-done {
+  background: #98f6b1;
+}
