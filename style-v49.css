@@ -1,0 +1,9 @@
+@import url("./style-v48.css?v=48");
+
+#view-todo .status-done,
+#view-todo-detail .status-done {
+  color: #16442a;
+  background: #83f5a3;
+  box-shadow: none;
+  border: 0;
+}
