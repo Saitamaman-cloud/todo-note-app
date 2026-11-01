@@ -1,0 +1,5 @@
+@import url("./style-v57.css?v=57");
+
+/* Match each status control's height to its width. */
+.subtask-row:not(.is-template) { align-items: center; }
+.subtask-row .subtask-state { height: 32px; min-height: 32px; }
