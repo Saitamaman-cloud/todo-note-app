@@ -1,0 +1,5 @@
+@import url("./style-v56.css?v=56");
+
+/* Narrow the controls to give longer titles more room, while keeping a tall touch target. */
+.subtask-row:not(.is-template) { grid-template-columns: 32px 32px minmax(0, 1fr); gap: 3px; }
+.subtask-state { width: 32px; font-size: 1rem; }
