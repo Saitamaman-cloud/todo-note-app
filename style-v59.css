@@ -1,0 +1,12 @@
+@import url("./style-v58.css?v=58");
+
+/* Color only the time, leaving task status and title styling unchanged. */
+#view-todo .todo-row-time[data-period] {
+  border-radius: 5px;
+  padding: 3px 4px;
+  text-align: center;
+  color: #253441;
+}
+#view-todo .todo-row-time[data-period="morning"] { background: #e0f3fc; }
+#view-todo .todo-row-time[data-period="afternoon"] { background: #fff3c9; }
+#view-todo .todo-row-time[data-period="night"] { background: #eee6fa; }
