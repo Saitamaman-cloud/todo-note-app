@@ -1,0 +1,13 @@
+@import url("./style-v59.css?v=59");
+
+.subtask-row.subtask-numbered:not(.is-template) {
+  grid-template-columns: repeat(var(--subtask-button-count, 1), 32px) minmax(0, 1fr);
+}
+.subtask-number[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--surface);
+}
+.subtask-hidden-checks { display: block; font-size: .7rem; color: var(--accent-dark); }
+.subtask-mode-toggle { padding: 6px 10px; min-height: 36px; margin-bottom: 8px; }
+.subtask-mode-toggle[hidden] { display: none; }
